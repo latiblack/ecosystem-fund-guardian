@@ -5,13 +5,14 @@
   --border: #1a1a1a;
   --text: #ffffff;
   --text-dim: #888888;
-  --accent: #4ade80;
-  --accent-hover: #22c55e;
-  --green: #4ade80;
+  --accent: #d4ff00;
+  --accent-hover: #c8f000;
+  --green: #d4ff00;
   --red: #ef4444;
   --yellow: #eab308;
   --font-heading: 'Oswald', sans-serif;
-  --font-body: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 * {
@@ -107,13 +108,12 @@ body {
   display: inline-block;
   padding: 6px 16px;
   border: 1px solid var(--accent);
-  border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 3px;
   color: var(--accent);
   margin-bottom: 32px;
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
 }
 
 .hero h1 {
@@ -162,9 +162,9 @@ body {
 }
 
 .section-label {
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 3px;
   color: var(--accent);
   margin-bottom: 16px;
@@ -250,22 +250,21 @@ body {
 
 .flow-step.highlight {
   border-color: var(--accent);
-  background: rgba(74, 222, 128, 0.04);
+  background: rgba(212, 255, 0, 0.03);
 }
 
 .flow-num {
   width: 40px;
   height: 40px;
   min-width: 40px;
-  border-radius: 0;
   background: var(--bg-input);
   border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14px;
 }
 
 .flow-step.highlight .flow-num {
@@ -442,6 +441,7 @@ body {
 }
 
 .stat .label {
+  font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -457,7 +457,7 @@ body {
 }
 
 .stat .value.green {
-  color: var(--green);
+  color: var(--accent);
 }
 
 .stat .value.red {
@@ -483,7 +483,7 @@ body {
 }
 
 .table th {
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   color: var(--text-dim);
   font-weight: 500;
   font-size: 10px;
@@ -495,6 +495,7 @@ body {
 .badge {
   display: inline-block;
   padding: 4px 10px;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -502,8 +503,8 @@ body {
 }
 
 .badge.verified {
-  background: rgba(74, 222, 128, 0.15);
-  color: var(--green);
+  background: rgba(212, 255, 0, 0.12);
+  color: var(--accent);
 }
 
 .badge.rejected {
@@ -517,12 +518,12 @@ body {
 }
 
 .badge.paid {
-  background: rgba(74, 222, 128, 0.15);
-  color: var(--green);
+  background: rgba(212, 255, 0, 0.12);
+  color: var(--accent);
 }
 
 .badge.active {
-  background: rgba(74, 222, 128, 0.15);
+  background: rgba(212, 255, 0, 0.12);
   color: var(--accent);
 }
 
@@ -533,8 +534,9 @@ body {
 
 .form-group label {
   display: block;
+  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   margin-bottom: 6px;
   color: var(--text-dim);
   text-transform: uppercase;
@@ -640,7 +642,8 @@ body {
   background: var(--bg-input);
   border: 1px solid var(--border);
   padding: 16px;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 12px;
   white-space: pre-wrap;
   color: var(--text-dim);
   max-height: 200px;
@@ -661,7 +664,7 @@ body {
 }
 
 .toast.success {
-  border-color: var(--green);
+  border-color: var(--accent);
 }
 
 .toast.error {
