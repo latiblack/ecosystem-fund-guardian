@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Lock, Loader2, CheckCircle2, XCircle, ArrowLeft } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 
@@ -60,14 +61,15 @@ export default function CreateCampaign() {
 
   return (
     <div>
+      <Link to="/" className="back-link"><ArrowLeft size={14} /> Back</Link>
       <h1 style={{ marginBottom: 8 }}>Lock Ecosystem Fund</h1>
-      <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-        Define what your ecosystem fund can be spent on. Every future disbursement will be verified against these rules by AI consensus.
+      <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
+        Define what your ecosystem fund can be used for. Every future disbursement will be verified against these rules by AI consensus.
       </p>
 
-      <form onSubmit={handleSubmit} className="card" style={{ maxWidth: 700 }}>
+      <form onSubmit={handleSubmit} className="card">
         <div className="form-group">
-          <label>Fund ID *</label>
+          <label>Fund ID</label>
           <input
             placeholder="e.g. projectx-ecosystem-q4-2026"
             value={form.fundId}
@@ -85,16 +87,16 @@ export default function CreateCampaign() {
         </div>
 
         <div className="form-group">
-          <label>Spending Rules (what this fund can be used for) *</label>
+          <label>Spending Rules — what this fund can be used for</label>
           <textarea
-            placeholder={`e.g.\nThis ecosystem fund is for growing the ProjectX community.\nApproved uses:\n- Marketing campaigns (creator content, social media, AMAs)\n- Developer grants and hackathon prizes\n- Community bounties and rewards\n- Partnership integrations\n\nNOT approved:\n- Team compensation\n- Operational expenses\n- Token buybacks`}
+            placeholder={"e.g.\nThis ecosystem fund is for growing the ProjectX community.\nApproved uses:\n- Marketing campaigns (creator content, social media, AMAs)\n- Developer grants and hackathon prizes\n- Community bounties and rewards\n\nNOT approved:\n- Team compensation\n- Operational expenses\n- Token buybacks"}
             value={form.rules}
             onChange={update("rules")}
             rows={8}
           />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+        <div className="form-row">
           <div className="form-group">
             <label>Max per disbursement</label>
             <input
@@ -104,7 +106,6 @@ export default function CreateCampaign() {
               onChange={update("maxPerDisbursement")}
             />
           </div>
-
           <div className="form-group">
             <label>Audit period (days)</label>
             <input
@@ -116,7 +117,7 @@ export default function CreateCampaign() {
         </div>
 
         <div className="form-group">
-          <label>Required deliverables for each disbursement</label>
+          <label>Required deliverables</label>
           <input
             placeholder="e.g. Proof of deliverable (URL to content, report, or work product)"
             value={form.requiredDeliverables}
@@ -135,13 +136,14 @@ export default function CreateCampaign() {
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Locking Fund..." : "Lock Ecosystem Fund"}
+          {loading ? <><Loader2 size={16} className="spin" /> Locking...</> : <><Lock size={16} /> Lock Ecosystem Fund</>}
         </button>
       </form>
 
       {toast && (
         <div className={`toast ${toast.type}`}>
-          {toast.type === "success" ? "✅" : "❌"} {toast.msg}
+          {toast.type === "success" ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+          <span>{toast.msg}</span>
         </div>
       )}
     </div>

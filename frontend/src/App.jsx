@@ -1,24 +1,45 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Menu, X, Shield } from "lucide-react";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import CreateCampaign from "./pages/CreateCampaign";
 import SubmitEvidence from "./pages/SubmitEvidence";
 import "./index.css";
 
+function Navbar() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+
+  const isLanding = location.pathname === "/";
+
+  const close = () => setOpen(false);
+
+  return (
+    <nav className="navbar">
+      <Link to="/" className="logo" onClick={close}>
+        <Shield size={18} />
+        <span>EFG</span>
+      </Link>
+
+      <button className="menu-toggle" onClick={() => setOpen(!open)}>
+        {open ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      <div className={`nav-links ${open ? "open" : ""}`}>
+        <Link to="/audit" onClick={close}>Audit</Link>
+        <Link to="/create" onClick={close}>Lock Fund</Link>
+        <Link to="/submit" onClick={close}>Request</Link>
+      </div>
+    </nav>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <div className="app">
-        <nav className="navbar">
-          <Link to="/" className="logo">
-            ��️ Ecosystem Fund Guardian
-          </Link>
-          <div className="nav-links">
-            <Link to="/audit">Audit Dashboard</Link>
-            <Link to="/create">Lock Fund</Link>
-            <Link to="/submit">Request Disbursement</Link>
-          </div>
-        </nav>
+        <Navbar />
         <main className="main">
           <Routes>
             <Route path="/" element={<Landing />} />

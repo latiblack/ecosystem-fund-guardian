@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { Send, Loader2, CheckCircle2, XCircle, ArrowLeft, ExternalLink } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 
@@ -53,14 +54,16 @@ export default function SubmitEvidence() {
 
   return (
     <div>
+      <Link to="/" className="back-link"><ArrowLeft size={14} /> Back</Link>
       <h1 style={{ marginBottom: 8 }}>Request Disbursement</h1>
-      <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-        Submit evidence of your deliverable. AI consensus will verify it against the fund's spending rules. Funds are only released if the proof is accepted.
+      <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
+        Submit evidence of your deliverable. AI consensus will verify it against the fund's spending rules.
+        Funds are only released if the proof is accepted.
       </p>
 
-      <form onSubmit={handleSubmit} className="card" style={{ maxWidth: 600 }}>
+      <form onSubmit={handleSubmit} className="card">
         <div className="form-group">
-          <label>Ecosystem Fund ID *</label>
+          <label>Ecosystem Fund ID</label>
           <input
             placeholder="e.g. projectx-ecosystem-q4-2026"
             value={form.fundId}
@@ -69,7 +72,7 @@ export default function SubmitEvidence() {
         </div>
 
         <div className="form-group">
-          <label>Recipient Wallet Address *</label>
+          <label>Recipient Wallet Address</label>
           <input
             placeholder="0x..."
             value={form.recipient}
@@ -78,26 +81,31 @@ export default function SubmitEvidence() {
         </div>
 
         <div className="form-group">
-          <label>Evidence URL *</label>
+          <label>Evidence URL</label>
           <input
             placeholder="https://..."
             value={form.url}
             onChange={update("url")}
           />
-          <p style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 6 }}>
+          <p className="form-hint">
             URL to proof of your deliverable — social media post, blog, GitHub PR, report, etc.
-            AI consensus will read this URL and verify it matches the fund's spending rules.
+            AI consensus will read this and verify it matches the fund's rules.
           </p>
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Submitting..." : "Submit Disbursement Request"}
+          {loading ? (
+            <><Loader2 size={16} className="spin" /> Submitting...</>
+          ) : (
+            <><Send size={16} /> Submit Disbursement Request</>
+          )}
         </button>
       </form>
 
       {toast && (
         <div className={`toast ${toast.type}`}>
-          {toast.type === "success" ? "✅" : "❌"} {toast.msg}
+          {toast.type === "success" ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+          <span>{toast.msg}</span>
         </div>
       )}
     </div>

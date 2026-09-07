@@ -1,5 +1,19 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import {
+  Search,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Coins,
+  ArrowUpRight,
+  ExternalLink,
+  Loader2,
+  ShieldCheck,
+  ShieldX,
+  Lock,
+} from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 
@@ -82,7 +96,7 @@ export default function Dashboard() {
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      showToast(`Disbursement of ${amount} released to ${recipient}`);
+      showToast(`Disbursement of ${amount} released`);
       loadDashboard();
     } catch (err) {
       showToast(err.message, "error");
@@ -102,56 +116,50 @@ export default function Dashboard() {
   return (
     <div>
       <h1 style={{ marginBottom: 8 }}>Ecosystem Fund Audit</h1>
-      <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-        Transparent, AI-verified ecosystem fund accountability. Every disbursement requires proof. No proof = funds stay locked.
+      <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
+        Every disbursement requires verified proof. No proof — funds stay locked.
       </p>
 
       {/* Fund selector */}
-      <form onSubmit={handleSearch} className="campaign-selector">
+      <form onSubmit={handleSearch} className="search-bar">
+        <Search size={16} />
         <input
           type="text"
-          placeholder="Enter ecosystem fund ID to audit..."
+          placeholder="Enter fund ID to audit..."
           value={fundId}
           onChange={(e) => setFundId(e.target.value)}
         />
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Loading..." : "Audit Fund"}
+          {loading ? <Loader2 size={16} className="spin" /> : "Audit"}
         </button>
       </form>
 
       {!campaign && !loading && (
-        <div className="empty">
-          <h2 style={{ marginBottom: 12 }}>No Fund Selected</h2>
+        <div className="empty-state">
+          <Lock size={48} className="icon-dim" />
+          <h2>No Fund Selected</h2>
           <p>Enter a fund ID to view its audit trail, or lock a new ecosystem fund.</p>
-          <p style={{ marginTop: 16, fontSize: 13 }}>
-            <a href="/create" style={{ color: "var(--accent)" }}>Lock Ecosystem Fund →</a>
-          </p>
+          <Link to="/create" className="btn btn-primary" style={{ marginTop: 16 }}>
+            Lock Ecosystem Fund
+          </Link>
         </div>
       )}
 
       {campaign && (
         <>
           {/* Compliance banner */}
-          <div className="card" style={{
-            borderColor: rejectedCount > 0 ? "var(--red)" : verifiedCount > 0 ? "var(--green)" : "var(--border)",
-            borderWidth: 2,
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h2 style={{ marginBottom: 4 }}>
-                  {campaign.id}
-                </h2>
-                <span className={`badge ${campaign.status}`}>{campaign.status}</span>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 12, color: "var(--text-dim)", textTransform: "uppercase" }}>Compliance Status</div>
-                <div style={{
-                  fontSize: 20,
-                  fontWeight: 700,
-                  color: rejectedCount > 0 ? "var(--red)" : verifiedCount > 0 ? "var(--green)" : "var(--yellow)",
-                }}>
-                  {rejectedCount > 0 ? "VIOLATIONS DETECTED" : verifiedCount > 0 ? "COMPLIANT" : "PENDING REVIEW"}
-                </div>
+          <div className={`compliance-banner ${rejectedCount > 0 ? "violations" : verifiedCount > 0 ? "compliant" : "pending"}`}>
+            <div className="compliance-left">
+              <h2>{campaign.id}</h2>
+              <span className={`badge ${campaign.status}`}>{campaign.status}</span>
+            </div>
+            <div className="compliance-right">
+              <div className="compliance-label">COMPLIANCE STATUS</div>
+              <div className="compliance-value">
+                {rejectedCount > 0 && <ShieldX size={20} />}
+                {rejectedCount === 0 && verifiedCount > 0 && <ShieldCheck size={20} />}
+                {rejectedCount === 0 && verifiedCount === 0 && <Clock size={20} />}
+                {rejectedCount > 0 ? "VIOLATIONS DETECTED" : verifiedCount > 0 ? "COMPLIANT" : "PENDING REVIEW"}
               </div>
             </div>
           </div>
@@ -159,7 +167,7 @@ export default function Dashboard() {
           {/* Fund stats */}
           <div className="stats">
             <div className="stat">
-              <div className="label">Total Fund Locked</div>
+              <div className="label">Total Locked</div>
               <div className="value">{funds?.deposited || 0}</div>
             </div>
             <div className="stat">
@@ -167,51 +175,49 @@ export default function Dashboard() {
               <div className="value green">{funds?.spent || 0}</div>
             </div>
             <div className="stat">
-              <div className="label">Remaining (Locked)</div>
+              <div className="label">Remaining</div>
               <div className="value">{funds?.remaining || 0}</div>
             </div>
             <div className="stat">
-              <div className="label">Verified Disbursements</div>
+              <div className="label">Verified</div>
               <div className="value green">{verifiedCount}</div>
             </div>
             <div className="stat">
-              <div className="label">Rejected (No Proof)</div>
+              <div className="label">Rejected</div>
               <div className="value red">{rejectedCount}</div>
             </div>
             <div className="stat">
-              <div className="label">Awaiting Verification</div>
+              <div className="label">Pending</div>
               <div className="value yellow">{pendingCount}</div>
             </div>
           </div>
 
           {/* Fund Policy */}
           <div className="card">
-            <h2>Fund Policy (Governance Rules)</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <h2>Fund Policy</h2>
+            <div className="policy-grid">
               <div>
-                <h3>Approved Spending Rules</h3>
+                <h3>Spending Rules</h3>
                 <div className="rules-box">{campaign.rules || "No rules defined"}</div>
               </div>
               <div>
-                <h3>Fund Parameters</h3>
-                <div style={{ fontSize: 14, lineHeight: 2 }}>
-                  <div>
-                    <span style={{ color: "var(--text-dim)" }}>Max per disbursement: </span>
-                    <strong>{campaign.max_per_recipient || "Unlimited"}</strong>
+                <h3>Parameters</h3>
+                <div className="param-list">
+                  <div className="param">
+                    <span className="param-label">Max per disbursement</span>
+                    <span className="param-value">{campaign.max_per_recipient || "Unlimited"}</span>
                   </div>
-                  <div>
-                    <span style={{ color: "var(--text-dim)" }}>Audit period: </span>
-                    <strong>{campaign.duration_days} days</strong>
+                  <div className="param">
+                    <span className="param-label">Audit period</span>
+                    <span className="param-value">{campaign.duration_days} days</span>
                   </div>
-                  <div>
-                    <span style={{ color: "var(--text-dim)" }}>Required deliverables: </span>
-                    {campaign.required_deliverables || "None specified"}
+                  <div className="param">
+                    <span className="param-label">Deliverables</span>
+                    <span className="param-value">{campaign.required_deliverables || "None"}</span>
                   </div>
-                  <div>
-                    <span style={{ color: "var(--text-dim)" }}>Locked by: </span>
-                    <span style={{ fontSize: 12, wordBreak: "break-all", fontFamily: "monospace" }}>
-                      {campaign.creator}
-                    </span>
+                  <div className="param">
+                    <span className="param-label">Locked by</span>
+                    <span className="param-value mono">{campaign.creator}</span>
                   </div>
                 </div>
               </div>
@@ -220,91 +226,93 @@ export default function Dashboard() {
 
           {/* Disbursement Audit Trail */}
           <div className="card">
-            <h2>Disbursement Audit Trail</h2>
+            <h2>Audit Trail</h2>
             {submissions.length === 0 ? (
-              <div className="empty">
+              <div className="empty-state small">
+                <Coins size={32} className="icon-dim" />
                 <p>No disbursement requests yet</p>
-                <p style={{ marginTop: 12, fontSize: 13 }}>
-                  <a href="/submit" style={{ color: "var(--accent)" }}>Submit a disbursement request →</a>
-                </p>
+                <Link to="/submit" className="btn btn-outline" style={{ marginTop: 12 }}>
+                  Submit Disbursement Request
+                </Link>
               </div>
             ) : (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Recipient</th>
-                    <th>Evidence (URL)</th>
-                    <th>Verification</th>
-                    <th>AI Verdict</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.map((s) => (
-                    <tr key={s.key}>
-                      <td style={{ fontSize: 12, fontFamily: "monospace" }}>
-                        {s.recipient}
-                      </td>
-                      <td>
-                        <a
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener"
-                          style={{ color: "var(--accent)", fontSize: 13 }}
-                        >
-                          {s.url.length > 40 ? s.url.slice(0, 40) + "..." : s.url}
-                        </a>
-                      </td>
-                      <td>
-                        <span className={`badge ${s.status}`}>
-                          {s.status === "verified" ? "PROOF ACCEPTED" : s.status === "rejected" ? "PROOF REJECTED" : "AWAITING PROOF"}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: 13, color: "var(--text-dim)", maxWidth: 200 }}>
-                        {s.reason || "—"}
-                      </td>
-                      <td>
-                        {s.status === "pending" && (
-                          <button
-                            className="btn btn-primary btn-small"
-                            onClick={() => handleVerify(s.recipient)}
-                            disabled={verifying[s.recipient.toLowerCase()]}
-                          >
-                            {verifying[s.recipient.toLowerCase()] ? "Verifying..." : "Verify Proof"}
-                          </button>
-                        )}
-                        {s.status === "verified" && (
-                          <button
-                            className="btn btn-primary btn-small"
-                            onClick={() => handlePay(s.recipient, funds?.max_per_recipient || 0)}
-                            disabled={paying[s.recipient.toLowerCase()]}
-                            style={{ background: "var(--green)" }}
-                          >
-                            {paying[s.recipient.toLowerCase()] ? "Releasing..." : "Release Funds"}
-                          </button>
-                        )}
-                        {s.status === "rejected" && (
-                          <span style={{ color: "var(--red)", fontSize: 13, fontWeight: 600 }}>
-                            FUNDS LOCKED
-                          </span>
-                        )}
-                      </td>
+              <div className="table-wrap">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Recipient</th>
+                      <th>Evidence</th>
+                      <th>Status</th>
+                      <th>Verdict</th>
+                      <th>Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {submissions.map((s) => (
+                      <tr key={s.key}>
+                        <td className="mono">{s.recipient}</td>
+                        <td>
+                          <a href={s.url} target="_blank" rel="noopener" className="link">
+                            {s.url.length > 35 ? s.url.slice(0, 35) + "..." : s.url}
+                            <ExternalLink size={12} />
+                          </a>
+                        </td>
+                        <td>
+                          <span className={`badge ${s.status}`}>
+                            {s.status === "verified" ? "VERIFIED" : s.status === "rejected" ? "REJECTED" : "PENDING"}
+                          </span>
+                        </td>
+                        <td className="dim">{s.reason || "—"}</td>
+                        <td>
+                          {s.status === "pending" && (
+                            <button
+                              className="btn btn-primary btn-small"
+                              onClick={() => handleVerify(s.recipient)}
+                              disabled={verifying[s.recipient.toLowerCase()]}
+                            >
+                              {verifying[s.recipient.toLowerCase()] ? (
+                                <><Loader2 size={12} className="spin" /> Verifying</>
+                              ) : (
+                                <><CheckCircle2 size={12} /> Verify</>
+                              )}
+                            </button>
+                          )}
+                          {s.status === "verified" && (
+                            <button
+                              className="btn btn-primary btn-small"
+                              onClick={() => handlePay(s.recipient, funds?.max_per_recipient || 0)}
+                              disabled={paying[s.recipient.toLowerCase()]}
+                            >
+                              {paying[s.recipient.toLowerCase()] ? (
+                                <><Loader2 size={12} className="spin" /> Releasing</>
+                              ) : (
+                                <><ArrowUpRight size={12} /> Release</>
+                              )}
+                            </button>
+                          )}
+                          {s.status === "rejected" && (
+                            <span className="locked-label">
+                              <Lock size={12} /> LOCKED
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
           {/* How it works */}
-          <div className="card" style={{ borderColor: "var(--accent)" }}>
+          <div className="card how-it-works">
             <h2>How Fund Governance Works</h2>
-            <div style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-dim)" }}>
-              <p><strong>1. Lock:</strong> Project deposits ecosystem tokens into a governed Spending Contract.</p>
-              <p><strong>2. Rules:</strong> A Governance Contract defines what the funds can be used for (natural language).</p>
-              <p><strong>3. Proof:</strong> Every disbursement requires verifiable evidence of deliverables.</p>
-              <p><strong>4. Verify:</strong> AI consensus reads the evidence and evaluates it against the rules.</p>
-              <p><strong>5. Release:</strong> Only verified disbursements get paid. No proof = funds stay locked.</p>
+            <div className="steps-list">
+              <div className="step-item"><span className="step-num">01</span> Project locks ecosystem tokens into a governed Spending Contract</div>
+              <div className="step-item"><span className="step-num">02</span> Governance Contract defines what the funds can be used for</div>
+              <div className="step-item"><span className="step-num">03</span> Every disbursement requires verifiable evidence of deliverables</div>
+              <div className="step-item"><span className="step-num">04</span> AI consensus reads the evidence and verifies it against the rules</div>
+              <div className="step-item"><span className="step-num">05</span> Only verified disbursements get paid — no proof, funds stay locked</div>
             </div>
           </div>
         </>
@@ -312,7 +320,8 @@ export default function Dashboard() {
 
       {toast && (
         <div className={`toast ${toast.type}`}>
-          {toast.type === "success" ? "✅" : "❌"} {toast.msg}
+          {toast.type === "success" ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+          <span>{toast.msg}</span>
         </div>
       )}
     </div>

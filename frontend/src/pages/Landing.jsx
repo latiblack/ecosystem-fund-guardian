@@ -1,11 +1,25 @@
 import { Link } from "react-router-dom";
+import {
+  ShieldAlert,
+  Eye,
+  Lock,
+  FileCheck,
+  Coins,
+  ArrowDown,
+  CheckCircle2,
+  XCircle,
+  Landmark,
+  Users,
+  Gift,
+  Megaphone,
+  ChevronRight,
+} from "lucide-react";
 
 export default function Landing() {
   return (
     <div className="landing">
       {/* Hero */}
       <section className="hero">
-        <div className="hero-badge">GENLAYER PROTOCOL</div>
         <h1>
           Projects lie about
           <br />
@@ -19,14 +33,13 @@ export default function Landing() {
         <p className="hero-desc">
           Lock your ecosystem funds. Define spending rules in plain English.
           Every disbursement requires AI-verified proof.
-          <br />
-          No proof = funds stay locked.
+          No proof — funds stay locked.
         </p>
         <div className="hero-actions">
           <Link to="/create" className="btn btn-primary btn-lg">
-            Lock Your Ecosystem Fund
+            Lock Your Fund <ChevronRight size={18} />
           </Link>
-          <Link to="/" className="btn btn-outline btn-lg">
+          <Link to="/audit" className="btn btn-outline btn-lg">
             View Audit Dashboard
           </Link>
         </div>
@@ -39,17 +52,17 @@ export default function Landing() {
         <p className="asterisk">*terms and conditions may not exist</p>
         <div className="problem-grid">
           <div className="problem-card">
-            <div className="problem-icon">📢</div>
+            <Coins size={24} className="icon-accent" />
             <h3>Projects announce tokenomics</h3>
             <p>"20% of supply goes to ecosystem fund for community growth"</p>
           </div>
           <div className="problem-card">
-            <div className="problem-icon">🤫</div>
+            <ShieldAlert size={24} className="icon-red" />
             <h3>Team quietly drains the fund</h3>
             <p>No audit trail. No verification. The community can't see where the money goes.</p>
           </div>
           <div className="problem-card">
-            <div className="problem-icon">🤷</div>
+            <Eye size={24} className="icon-dim" />
             <h3>Community has to trust blindly</h3>
             <p>There's no way to confirm the ecosystem fund is being used as promised.</p>
           </div>
@@ -68,42 +81,42 @@ export default function Landing() {
 
         <div className="flow">
           <div className="flow-step">
-            <div className="flow-num">1</div>
+            <div className="flow-num"><Lock size={16} /></div>
             <div className="flow-content">
               <h3>Lock</h3>
               <p>Project deposits ecosystem tokens into a governed Spending Contract</p>
             </div>
           </div>
-          <div className="flow-arrow">↓</div>
+          <div className="flow-arrow"><ArrowDown size={16} /></div>
           <div className="flow-step">
-            <div className="flow-num">2</div>
+            <div className="flow-num"><FileCheck size={16} /></div>
             <div className="flow-content">
               <h3>Define Rules</h3>
               <p>Governance Contract stores what the funds can be used for — in natural language</p>
             </div>
           </div>
-          <div className="flow-arrow">↓</div>
+          <div className="flow-arrow"><ArrowDown size={16} /></div>
           <div className="flow-step">
-            <div className="flow-num">3</div>
+            <div className="flow-num"><Coins size={16} /></div>
             <div className="flow-content">
               <h3>Request Disbursement</h3>
               <p>Recipient submits evidence URL — proof of deliverable</p>
             </div>
           </div>
-          <div className="flow-arrow">↓</div>
+          <div className="flow-arrow"><ArrowDown size={16} /></div>
           <div className="flow-step highlight">
-            <div className="flow-num">4</div>
+            <div className="flow-num"><Eye size={16} /></div>
             <div className="flow-content">
               <h3>AI Verifies</h3>
-              <p>GenLayer AI consensus reads the URL and evaluates it against the spending rules</p>
+              <p>AI consensus reads the URL and evaluates it against the spending rules</p>
             </div>
           </div>
-          <div className="flow-arrow">↓</div>
+          <div className="flow-arrow"><ArrowDown size={16} /></div>
           <div className="flow-step">
-            <div className="flow-num">5</div>
+            <div className="flow-num"><CheckCircle2 size={16} /></div>
             <div className="flow-content">
               <h3>Release or Lock</h3>
-              <p>Verified → funds released. Rejected → funds stay locked. No exceptions.</p>
+              <p>Verified — funds released. Rejected — funds stay locked. No exceptions.</p>
             </div>
           </div>
         </div>
@@ -111,28 +124,32 @@ export default function Landing() {
 
       {/* Key Feature */}
       <section className="section">
-        <div className="section-label">WHY GENLAYER</div>
+        <div className="section-label">WHY THIS WORKS</div>
         <h2>The rules are written in English.<br />The enforcement is automatic.</h2>
         <p className="section-desc">
           No simple smart contract can read a URL, understand what it contains,
-          and judge whether it meets natural language requirements. GenLayer AI consensus can.
-          That's what makes this tool possible.
+          and judge whether it meets natural language requirements.
+          AI consensus can. That's what makes this tool possible.
         </p>
         <div className="feature-grid">
           <div className="feature-card">
-            <h3>🗣️ Natural Language Rules</h3>
+            <FileCheck size={20} className="icon-accent" />
+            <h3>Natural Language Rules</h3>
             <p>Define spending rules in plain English. No code needed. "Marketing campaigns only — not team compensation."</p>
           </div>
           <div className="feature-card">
-            <h3>🔍 AI-Powered Verification</h3>
-            <p>AI consensus reads the submitted evidence and evaluates it against the rules. Trustless, decentralized, tamper-proof.</p>
+            <Eye size={20} className="icon-accent" />
+            <h3>AI-Powered Verification</h3>
+            <p>AI consensus reads the submitted evidence and evaluates it against the rules. Trustless, decentralized.</p>
           </div>
           <div className="feature-card">
-            <h3>🔗 Contract Governance</h3>
+            <Lock size={20} className="icon-accent" />
+            <h3>Contract Governance</h3>
             <p>One contract governs another. The Spending Contract cannot pay without the Governance Contract's permission.</p>
           </div>
           <div className="feature-card">
-            <h3>📊 Public Audit Trail</h3>
+            <ShieldAlert size={20} className="icon-accent" />
+            <h3>Public Audit Trail</h3>
             <p>Every disbursement, every verdict, every outcome — visible on a public dashboard. Community can audit everything.</p>
           </div>
         </div>
@@ -144,18 +161,22 @@ export default function Landing() {
         <h2>Any fund. Any project. Any token.</h2>
         <div className="usecase-grid">
           <div className="usecase-card">
+            <Coins size={20} className="icon-accent" />
             <h3>Ecosystem Funds</h3>
             <p>Prove to your community that ecosystem tokens are being used for growth, not team pockets.</p>
           </div>
           <div className="usecase-card">
+            <Landmark size={20} className="icon-accent" />
             <h3>DAO Treasuries</h3>
             <p>Enforce spending policies automatically. Every grant, every bounty — verified before payment.</p>
           </div>
           <div className="usecase-card">
+            <Gift size={20} className="icon-accent" />
             <h3>Grant Programs</h3>
             <p>Recipients submit proof of work. AI verifies it matches the grant criteria. Funds released only on verification.</p>
           </div>
           <div className="usecase-card">
+            <Megaphone size={20} className="icon-accent" />
             <h3>Marketing Budgets</h3>
             <p>Creators submit content URLs. AI checks if they meet campaign requirements. No manual review needed.</p>
           </div>
@@ -164,18 +185,18 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="cta-section">
-        <h2>Stop trusting. Start verifying.</h2>
+        <h2>Stop trusting.<br />Start verifying.</h2>
         <p>Lock your ecosystem fund. Define the rules. Let AI enforce them.</p>
         <div className="hero-actions">
           <Link to="/create" className="btn btn-primary btn-lg">
-            Lock Your Ecosystem Fund
+            Lock Your Fund <ChevronRight size={18} />
           </Link>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="footer">
-        <p>Ecosystem Fund Guardian — Built on GenLayer</p>
+        <p>Ecosystem Fund Guardian</p>
         <p className="footer-sub">One contract governs another. AI consensus verifies everything.</p>
       </footer>
     </div>
