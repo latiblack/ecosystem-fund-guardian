@@ -130,7 +130,7 @@ body {
 }
 
 .hero h1 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 56px;
   font-weight: 700;
   line-height: 1.1;
@@ -183,7 +183,7 @@ body {
 }
 
 .section h2 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 36px;
   font-weight: 700;
   margin-bottom: 16px;
@@ -228,7 +228,7 @@ body {
 }
 
 .problem-card h3 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -282,7 +282,7 @@ body {
 }
 
 .flow-content h3 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 4px;
@@ -317,7 +317,7 @@ body {
 }
 
 .feature-card h3 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -346,7 +346,7 @@ body {
 }
 
 .usecase-card h3 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 8px;
@@ -380,7 +380,7 @@ body {
 }
 
 .cta-section h2 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 40px;
   font-weight: 700;
   margin-bottom: 16px;
@@ -424,7 +424,7 @@ body {
 }
 
 .card h2 {
-  font-family: var(--font-body);
+  font-family: var(--font-heading);
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
