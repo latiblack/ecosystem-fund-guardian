@@ -56,19 +56,28 @@ export default function App() {
   return (
     <WalletProvider>
       <BrowserRouter>
-        <div className="app">
-          <Navbar />
-          <main className="main">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/project/:id" element={<ProjectDetail />} />
-              <Route path="/create" element={<CreateCampaign />} />
-              <Route path="/submit" element={<SubmitEvidence />} />
-            </Routes>
-          </main>
-        </div>
+        <AppLayout />
       </BrowserRouter>
     </WalletProvider>
+  );
+}
+
+function AppLayout() {
+  const location = useLocation();
+  const isLanding = location.pathname === "/";
+
+  return (
+    <div className="app">
+      {!isLanding && <Navbar />}
+      <main className="main">
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/project/:id" element={<ProjectDetail />} />
+          <Route path="/create" element={<CreateCampaign />} />
+          <Route path="/submit" element={<SubmitEvidence />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
