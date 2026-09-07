@@ -1,99 +1,101 @@
 # Ecosystem Fund Guardian
 
-A GenLayer protocol where one contract governs another. The **Governance Contract** (AI-powered intelligent contract) defines spending rules in natural language, verifies deliverables via AI consensus, and authorizes payments. The **Spending Contract** (deterministic) holds funds but **cannot pay without the Governance Contract's permission**.
+**Projects lie about ecosystem spending. Our tool makes it impossible.**
+
+A GenLayer protocol where one contract governs another. Projects lock their ecosystem funds into a Spending Contract governed by a Governance Contract. Every disbursement requires AI-verified proof of deliverables. No proof = funds stay locked.
+
+## The Problem
+
+Projects announce tokenomics — "20% of supply goes to ecosystem fund." But there's no way to verify that. The team quietly takes part of it. No audit trail. No accountability. Community has to trust blindly.
+
+## The Solution
+
+Lock ecosystem funds in a governed contract. Define spending rules in natural language. Every disbursement requires verifiable evidence. AI consensus reads the evidence and verifies it matches the rules. The community sees everything on a public dashboard.
+
+```
+Project locks funds → Defines rules → Disbursement requested → Evidence submitted → AI verifies → Release or lock
+```
 
 ## Architecture
 
 ```
-┌──────────────┐
-│   Frontend   │  React + Vite — dashboard, forms
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│  Backend API │  Express — signer, mediates frontend ↔ contracts
-└──┬───────┬───┘
-   │       │
-   ▼       ▼
-┌────────────┐  ┌──────────────┐
-│ Governance │  │   Spending   │
-│  Contract  │  │   Contract   │
-│ (GenLayer) │  │ (GenLayer)   │
-│ AI-powered │  │ Deterministic│
-└────────────┘  └──────────────┘
+┌──────────────────┐
+│  Audit Dashboard  │  React + Vite — public transparency
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│   Backend API    │  Express — signer, mediates frontend ↔ contracts
+└──┬───────────┬───┘
+   │           │
+   ▼           ▼
+┌────────────┐  ┌──────────────────┐
+│ Governance │  │    Spending      │
+│  Contract  │  │    Contract      │
+│ (GenLayer) │  │  (GenLayer)      │
+│ AI-powered │  │  Deterministic   │
+│ THE GOVERNOR│  │  THE GOVERNED    │
+└────────────┘  └──────────────────┘
 ```
 
-**Governance Contract** = the governor (stores rules, verifies evidence with AI, authorizes payments)
-**Spending Contract** = the governed (holds tokens, can only pay when Governance says YES)
+**Governance Contract** — the governor (stores rules, verifies evidence with AI, authorizes payments)
+**Spending Contract** — the governed (holds tokens, can only pay when Governance says YES)
 
-## How it works
+This is "a contract governing another contract." The Spending Contract literally cannot pay without the Governance Contract's permission.
 
-1. **DAO approves** a spending proposal (on their own chain/tool)
-2. **Project creates campaign** on Governance Contract (rules in natural language)
-3. **Project funds** the Spending Contract (any token)
-4. **Creator submits** evidence URL (social media post, blog, PR)
-5. **GenLayer AI verifies** the evidence against the campaign rules
-6. **Spending Contract pays** — but ONLY if Governance says verified
+## How Projects Use It
+
+1. **DAO votes** to allocate 20% of tokens to ecosystem (on their own chain)
+2. **Project locks** those tokens in the Spending Contract on GenLayer
+3. **Project defines** what the funds can be used for (natural language rules)
+4. **Disbursement requests** come in with evidence URLs
+5. **AI consensus** reads the evidence and verifies it matches the rules
+6. **Only verified disbursements** get paid. No proof = funds stay locked.
+7. **Community audits** the dashboard — every transaction visible
 
 ## Contracts
 
 ### Governance Contract (`contracts/governance.py`)
-- `create_campaign()` — define rules, recipients, limits
-- `submit_evidence()` — creator submits URL
+- `create_campaign()` — define spending rules in natural language
+- `submit_evidence()` — submit proof of deliverable (URL)
 - `verify()` — AI consensus reads URL, evaluates against rules
 - `is_payment_allowed()` — returns YES/NO (called by Spending Contract)
-- `get_campaign()` / `get_submission()` — views
+- `get_campaign()` / `get_submission()` — audit views
 
 ### Spending Contract (`contracts/spending.py`)
-- `fund()` — record deposit
-- `pay()` — release payment (requires Governance approval)
-- `get_campaign_funds()` — view
+- `fund()` — lock ecosystem tokens
+- `pay()` — release payment (governed by Governance Contract)
+- `get_campaign_funds()` — view fund status
 
-## Backend API (`server/src/server.js`)
+## Dashboard
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/health` | GET | Server status |
-| `/api/campaign` | POST | Create campaign |
-| `/api/campaign/:id` | GET | Get campaign |
-| `/api/evidence` | POST | Submit evidence URL |
-| `/api/verify` | POST | Trigger AI verification |
-| `/api/pay` | POST | Release payment (checks governance first) |
-| `/api/dashboard/:id` | GET | Combined campaign + submissions + funds |
-
-## Frontend
-
-- **Dashboard** — campaign stats, submissions table, verify/pay actions
-- **Create Campaign** — form with rules, limits, recipients
-- **Submit Evidence** — URL submission form
+The public audit dashboard shows:
+- **Compliance status** — compliant / violations detected / pending review
+- **Fund stats** — total locked, disbursed, remaining
+- **Audit trail** — every disbursement with evidence, AI verdict, and outcome
+- **Fund policy** — what the funds can be used for
 
 ## Setup
 
 ```bash
 # Server
-cd server
-cp .env.example .env
-# Fill in GENLAYER_PRIVATE_KEY, GOVERNANCE_CONTRACT, SPENDING_CONTRACT
-npm install
-npm start
+cd server && cp .env.example .env && npm install && npm start
 
 # Frontend
-cd frontend
-npm install
-npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 ## Deploy contracts
 
 ```bash
-# From GenLayer Studio or via genlayer CLI
 genlayer deploy --contract contracts/governance.py
 genlayer deploy --contract contracts/spending.py
 ```
 
-## Hackathon demo
+## Hackathon Demo
 
-1. Create campaign: "Creator marketing — 5 creators, $2K each, must mention ProjectX"
-2. Alice submits valid post → **VERIFIED** → **PAID** ✅
-3. Bob submits garbage URL → **REJECTED** → **LOCKED** 🚫
-4. Dashboard shows the whole picture
+1. "ProjectX allocated 500K tokens to ecosystem"
+2. Lock funds + define policy: "Marketing, grants, bounties — verified by evidence"
+3. Marketing agency delivers → evidence verified → **PAID** ✅
+4. Team member tries to drain funds with no deliverable → **REJECTED** → **LOCKED** ��
+5. Dashboard: full audit trail anyone can see
