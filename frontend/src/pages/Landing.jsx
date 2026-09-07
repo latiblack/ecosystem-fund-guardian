@@ -13,6 +13,8 @@ import {
   Gift,
   Megaphone,
   ChevronRight,
+  Code,
+  Calendar,
 } from "lucide-react";
 
 export default function Landing() {
@@ -161,24 +163,34 @@ export default function Landing() {
         <h2>Any fund. Any project. Any token.</h2>
         <div className="usecase-grid">
           <div className="usecase-card">
-            <Coins size={20} className="icon-accent" />
-            <h3>Ecosystem Funds</h3>
-            <p>Prove to your community that ecosystem tokens are being used for growth, not team pockets.</p>
+            <Megaphone size={20} className="icon-accent" />
+            <h3>Marketing Campaigns</h3>
+            <p>Verify that paid campaigns, creator promotions, and marketing deliverables were actually completed before releasing funds.</p>
           </div>
           <div className="usecase-card">
             <Landmark size={20} className="icon-accent" />
-            <h3>DAO Treasuries</h3>
-            <p>Enforce spending policies automatically. Every grant, every bounty — verified before payment.</p>
+            <h3>Ecosystem Grants</h3>
+            <p>Release grants based on verified milestones rather than sending the entire allocation upfront.</p>
+          </div>
+          <div className="usecase-card">
+            <Code size={20} className="icon-accent" />
+            <h3>Developer Grants</h3>
+            <p>Verify that developers delivered agreed features, integrations, or open-source work before subsequent payments.</p>
+          </div>
+          <div className="usecase-card">
+            <Users size={20} className="icon-accent" />
+            <h3>Partnerships</h3>
+            <p>Tie partner payments to verifiable deliverables and agreed conditions.</p>
+          </div>
+          <div className="usecase-card">
+            <Calendar size={20} className="icon-accent" />
+            <h3>Event Sponsorships</h3>
+            <p>Verify that sponsored events delivered agreed exposure, appearances, speaking slots, or promotional commitments.</p>
           </div>
           <div className="usecase-card">
             <Gift size={20} className="icon-accent" />
-            <h3>Grant Programs</h3>
-            <p>Recipients submit proof of work. AI verifies it matches the grant criteria. Funds released only on verification.</p>
-          </div>
-          <div className="usecase-card">
-            <Megaphone size={20} className="icon-accent" />
-            <h3>Marketing Budgets</h3>
-            <p>Creators submit content URLs. AI checks if they meet campaign requirements. No manual review needed.</p>
+            <h3>Community Programs</h3>
+            <p>Automate rewards for ambassadors, community contributors, and other growth programs based on verified activity.</p>
           </div>
         </div>
       </section>
