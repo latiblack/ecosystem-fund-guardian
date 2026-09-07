@@ -55,10 +55,10 @@ export default function SubmitEvidence() {
   return (
     <div>
       <Link to="/" className="back-link"><ArrowLeft size={14} /> Back</Link>
-      <h1 style={{ marginBottom: 8 }}>Request Disbursement</h1>
+      <h1 style={{ marginBottom: 8 }}>Prove Your Deliverable</h1>
       <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
-        Submit evidence of your deliverable. AI consensus will verify it against the fund's spending rules.
-        Funds are only released if the proof is accepted.
+        Submit proof of your deliverable. AI consensus will verify it against the fund's spending rules.
+        Every verdict is public — your community can see exactly what was delivered.
       </p>
 
       <form onSubmit={handleSubmit} className="card">

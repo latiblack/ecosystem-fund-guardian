@@ -52,7 +52,7 @@ export default function Explore() {
         <div>
           <h1>Ecosystem Funds</h1>
           <p className="dim">
-            Browse ecosystem funds locked by projects. Every disbursement is verified by AI consensus.
+            Browse ecosystem funds locked by projects. Every disbursement, every rule, every verdict — transparent to your community.
           </p>
         </div>
         <Link to="/create" className="btn btn-primary">
@@ -81,7 +81,7 @@ export default function Explore() {
         <div className="empty-state">
           <Coins size={48} className="icon-dim" />
           <h2>No funds found</h2>
-          <p>{search ? "Try a different search term" : "Be the first to lock an ecosystem fund"}</p>
+          <p>{search ? "Try a different search term" : "Be the first to make your ecosystem fund transparent"}</p>
           {!search && (
             <Link to="/create" className="btn btn-primary" style={{ marginTop: 12 }}>
               <Lock size={16} /> Lock Your Fund
@@ -114,7 +114,7 @@ export default function Explore() {
                   {fund.creator?.slice(0, 8)}...{fund.creator?.slice(-6)}
                 </span>
                 <span className="fund-arrow">
-                  View Audit <ArrowRight size={14} />
+                  View Fund <ArrowRight size={14} />
                 </span>
               </div>
             </Link>

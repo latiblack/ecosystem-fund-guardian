@@ -62,9 +62,9 @@ export default function CreateCampaign() {
   return (
     <div>
       <Link to="/" className="back-link"><ArrowLeft size={14} /> Back</Link>
-      <h1 style={{ marginBottom: 8 }}>Lock Ecosystem Fund</h1>
+      <h1 style={{ marginBottom: 8 }}>Make Your Fund Transparent</h1>
       <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
-        Define what your ecosystem fund can be used for. Every future disbursement will be verified against these rules by AI consensus.
+        Define what your ecosystem fund can be used for. Every future disbursement will be verified against these rules and made visible to your community.
       </p>
 
       <form onSubmit={handleSubmit} className="card">

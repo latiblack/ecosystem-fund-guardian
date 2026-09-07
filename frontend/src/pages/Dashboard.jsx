@@ -115,9 +115,9 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 8 }}>Ecosystem Fund Audit</h1>
+      <h1 style={{ marginBottom: 8 }}>Ecosystem Fund Transparency</h1>
       <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
-        Every disbursement requires verified proof. No proof — funds stay locked.
+        Every rule, every disbursement, every verdict — visible to your community. No proof, funds stay locked.
       </p>
 
       {/* Fund selector */}
@@ -125,7 +125,7 @@ export default function Dashboard() {
         <Search size={16} />
         <input
           type="text"
-          placeholder="Enter fund ID to audit..."
+          placeholder="Search by fund name..."
           value={fundId}
           onChange={(e) => setFundId(e.target.value)}
         />
@@ -138,9 +138,9 @@ export default function Dashboard() {
         <div className="empty-state">
           <Lock size={48} className="icon-dim" />
           <h2>No Fund Selected</h2>
-          <p>Enter a fund ID to view its audit trail, or lock a new ecosystem fund.</p>
+          <p>Search for a fund by name, or lock a new ecosystem fund.</p>
           <Link to="/create" className="btn btn-primary" style={{ marginTop: 16 }}>
-            Lock Ecosystem Fund
+            Make Your Fund Transparent
           </Link>
         </div>
       )}
@@ -154,7 +154,7 @@ export default function Dashboard() {
               <span className={`badge ${campaign.status}`}>{campaign.status}</span>
             </div>
             <div className="compliance-right">
-              <div className="compliance-label">COMPLIANCE STATUS</div>
+              <div className="compliance-label">WHAT YOUR COMMUNITY SEES</div>
               <div className="compliance-value">
                 {rejectedCount > 0 && <ShieldX size={20} />}
                 {rejectedCount === 0 && verifiedCount > 0 && <ShieldCheck size={20} />}
@@ -306,13 +306,13 @@ export default function Dashboard() {
 
           {/* How it works */}
           <div className="card how-it-works">
-            <h2>How Fund Governance Works</h2>
+            <h2>How Fund Transparency Works</h2>
             <div className="steps-list">
-              <div className="step-item"><span className="step-num">01</span> Project locks ecosystem tokens into a governed Spending Contract</div>
-              <div className="step-item"><span className="step-num">02</span> Governance Contract defines what the funds can be used for</div>
-              <div className="step-item"><span className="step-num">03</span> Every disbursement requires verifiable evidence of deliverables</div>
-              <div className="step-item"><span className="step-num">04</span> AI consensus reads the evidence and verifies it against the rules</div>
-              <div className="step-item"><span className="step-num">05</span> Only verified disbursements get paid — no proof, funds stay locked</div>
+              <div className="step-item"><span className="step-num">01</span> Project locks ecosystem tokens — your community can see the balance</div>
+              <div className="step-item"><span className="step-num">02</span> Spending rules are stored on-chain in plain English — anyone can read them</div>
+              <div className="step-item"><span className="step-num">03</span> Every disbursement comes with proof — a URL to the deliverable</div>
+              <div className="step-item"><span className="step-num">04</span> AI consensus reads the proof and verifies it against the rules</div>
+              <div className="step-item"><span className="step-num">05</span> Only verified disbursements get paid — your community sees every verdict</div>
             </div>
           </div>
         </>
