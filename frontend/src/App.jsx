@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { Shield, Wallet } from "lucide-react";
+import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Menu, X, Shield, Wallet } from "lucide-react";
 import { WalletProvider, useWallet } from "./context/WalletContext";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
@@ -9,7 +10,12 @@ import SubmitEvidence from "./pages/SubmitEvidence";
 import "./index.css";
 
 function Navbar() {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
   const { address, connecting, connect, disconnect } = useWallet();
+
+  const isLanding = location.pathname === "/";
+  const close = () => setOpen(false);
 
   const shortAddr = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -17,15 +23,21 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="logo">
+      <Link to="/" className="logo" onClick={close}>
         <Shield size={18} />
         <span>EFG</span>
       </Link>
 
-      <div className="nav-links">
-        <Link to="/explore">Explore</Link>
-        <Link to="/create">Lock Fund</Link>
-        <Link to="/submit">Submit Proof</Link>
+      {!isLanding && (
+        <button className="menu-toggle" onClick={() => setOpen(!open)}>
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      )}
+
+      <div className={`nav-links ${open ? "open" : ""}`}>
+        <Link to="/explore" onClick={close}>Explore</Link>
+        <Link to="/create" onClick={close}>Lock Fund</Link>
+        <Link to="/submit" onClick={close}>Submit Proof</Link>
 
         {shortAddr ? (
           <button className="btn btn-wallet btn-connected" onClick={disconnect}>
