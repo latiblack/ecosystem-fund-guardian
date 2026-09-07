@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Code,
   Calendar,
+  Zap,
 } from "lucide-react";
 
 export default function Landing() {
@@ -22,20 +23,24 @@ export default function Landing() {
     <div className="landing">
       {/* Hero */}
       <section className="hero">
+        <div className="hero-badge">
+          <Zap size={12} />
+          <span>Powered by GenLayer</span>
+        </div>
         <h1>
-          Projects lie about
+          Prove your ecosystem
           <br />
-          <span className="gradient-text">ecosystem spending.</span>
+          <span className="gradient-text">funds are used right.</span>
         </h1>
         <h1 className="hero-sub">
-          Our tool makes it
+          Every token accounted for.
           <br />
-          <span className="gradient-text-green">impossible.</span>
+          <span className="gradient-text-green">Publicly. Automatically.</span>
         </h1>
         <p className="hero-desc">
           Lock your ecosystem funds. Define spending rules in plain English.
-          Every disbursement is publicly verified.
-          Your community can see exactly where the money goes.
+          GenLayer's AI consensus verifies every disbursement on-chain.
+          Your community sees exactly where the money goes.
         </p>
         <div className="hero-actions">
           <Link to="/create" className="btn btn-primary btn-lg">
@@ -80,6 +85,9 @@ export default function Landing() {
           A <strong>Spending Contract</strong> holds the funds.
           The Spending Contract cannot pay without the Governance Contract's permission.
           Every rule, every payment, every verdict — visible to your community.
+          <br /><br />
+          <span className="genlayer-highlight">Powered by GenLayer</span> — the only blockchain where smart contracts
+          can read URLs, understand natural language, and reach AI consensus on-chain.
         </p>
 
         <div className="flow">
@@ -110,8 +118,8 @@ export default function Landing() {
           <div className="flow-step highlight">
             <div className="flow-num"><Eye size={16} /></div>
             <div className="flow-content">
-              <h3>AI Verifies</h3>
-              <p>AI consensus reads the proof and checks it against the rules. Decentralized, transparent.</p>
+              <h3>GenLayer Verifies</h3>
+              <p>GenLayer's AI consensus reads the proof and checks it against the rules. Decentralized, on-chain.</p>
             </div>
           </div>
           <div className="flow-arrow"><ArrowDown size={16} /></div>
@@ -132,7 +140,7 @@ export default function Landing() {
         <p className="section-desc">
           No simple smart contract can read a URL, understand what it contains,
           and judge whether it meets natural language requirements.
-          AI consensus can. That's what makes transparent ecosystem spending possible.
+          GenLayer's AI consensus can. That's what makes transparent ecosystem spending possible.
         </p>
         <div className="feature-grid">
           <div className="feature-card">
@@ -142,8 +150,8 @@ export default function Landing() {
           </div>
           <div className="feature-card">
             <Eye size={20} className="icon-accent" />
-            <h3>AI-Powered Verification</h3>
-            <p>AI consensus reads submitted evidence and evaluates it against the rules. Every verdict is public.</p>
+            <h3>GenLayer AI Consensus</h3>
+            <p>GenLayer validators reach consensus on evidence using AI — reading URLs, evaluating proofs, and enforcing rules on-chain.</p>
           </div>
           <div className="feature-card">
             <Lock size={20} className="icon-accent" />
@@ -198,8 +206,12 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="cta-section">
-        <h2>Stop trusting.<br />Start proving.</h2>
-        <p>Lock your ecosystem fund. Define the rules. Let your community see every token.</p>
+        <div className="hero-badge" style={{ marginBottom: 16 }}>
+          <Zap size={12} />
+          <span>Powered by GenLayer</span>
+        </div>
+        <h2>Start proving.<br />Stop hoping.</h2>
+        <p>Lock your ecosystem fund. Define the rules. Let GenLayer verify every payment for your community.</p>
         <div className="hero-actions">
           <Link to="/create" className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
@@ -210,7 +222,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="footer">
         <p>Ecosystem Fund Guardian</p>
-        <p className="footer-sub">One contract governs another. Every payment is visible to your community.</p>
+        <p className="footer-sub">Powered by GenLayer. One contract governs another. Every payment is visible to your community.</p>
       </footer>
     </div>
   );
