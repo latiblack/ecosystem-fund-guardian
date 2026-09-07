@@ -49,13 +49,13 @@ export default function ProjectDetail() {
         <div className="detail-header-left">
           <div className="project-logo project-logo-lg">{project.logo}</div>
           <div>
-            <h1>{project.name}</h1>
-            <p className="dim">{project.description}</p>
-            <div className="detail-meta">
-              <span className="badge">{project.chain}</span>
-              <span className="badge">{project.token}</span>
-              <span className={`badge ${project.status}`}>{project.status}</span>
-            </div>
+          <h1>{project.name}</h1>
+          <div className="detail-meta">
+            <span className="badge">{project.chain}</span>
+            <span className="badge">{project.token}</span>
+            <span className={`badge ${project.status}`}>{project.status}</span>
+          </div>
+          <p className="detail-description">{project.description}</p>
           </div>
         </div>
       </div>

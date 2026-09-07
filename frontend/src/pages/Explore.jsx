@@ -6,7 +6,8 @@ import {
   Lock,
   TrendingUp,
   ShieldCheck,
-  ExternalLink,
+  Layers,
+  DollarSign,
 } from "lucide-react";
 import { SAMPLE_PROJECTS } from "../data/sampleProjects";
 
@@ -18,10 +19,16 @@ export default function Explore() {
     const q = search.toLowerCase();
     return (
       p.name.toLowerCase().includes(q) ||
-      p.tagline.toLowerCase().includes(q) ||
+      p.tags.some((t) => t.toLowerCase().includes(q)) ||
       p.chain.toLowerCase().includes(q)
     );
   });
+
+  const totalFunds = SAMPLE_PROJECTS.reduce((s, p) => s + p.fundCount, 0);
+  const totalLocked = SAMPLE_PROJECTS.reduce(
+    (s, p) => s + parseFloat(p.totalLocked.replace(/,/g, "")),
+    0
+  );
 
   return (
     <div>
@@ -29,12 +36,9 @@ export default function Explore() {
         <div>
           <h1>Ecosystem Funds</h1>
           <p className="dim">
-            Browse projects with locked ecosystem funds. Every disbursement is publicly verified by AI consensus.
+            Browse projects with locked ecosystem funds. Every disbursement is publicly verified.
           </p>
         </div>
-        <Link to="/create" className="btn btn-primary">
-          <Lock size={16} /> Lock Fund
-        </Link>
       </div>
 
       <div className="search-bar">
@@ -50,20 +54,37 @@ export default function Explore() {
       {/* Stats bar */}
       <div className="explore-stats">
         <div className="explore-stat">
-          <span className="explore-stat-value">{SAMPLE_PROJECTS.length}</span>
-          <span className="explore-stat-label">Projects</span>
+          <div className="explore-stat-icon"><Layers size={18} /></div>
+          <div className="explore-stat-content">
+            <span className="explore-stat-value">{SAMPLE_PROJECTS.length}</span>
+            <span className="explore-stat-label">Projects</span>
+          </div>
         </div>
         <div className="explore-stat">
-          <span className="explore-stat-value">
-            {SAMPLE_PROJECTS.reduce((s, p) => s + p.fundCount, 0)}
-          </span>
-          <span className="explore-stat-label">Active Funds</span>
+          <div className="explore-stat-icon"><Lock size={18} /></div>
+          <div className="explore-stat-content">
+            <span className="explore-stat-value">{totalFunds}</span>
+            <span className="explore-stat-label">Active Funds</span>
+          </div>
         </div>
         <div className="explore-stat">
-          <span className="explore-stat-value">
-            ${SAMPLE_PROJECTS.reduce((s, p) => s + parseFloat(p.totalLocked.replace(/,/g, "")), 0).toLocaleString()}
-          </span>
-          <span className="explore-stat-label">Total Locked</span>
+          <div className="explore-stat-icon"><DollarSign size={18} /></div>
+          <div className="explore-stat-content">
+            <span className="explore-stat-value">${(totalLocked / 1e6).toFixed(1)}M</span>
+            <span className="explore-stat-label">Total Locked</span>
+          </div>
+        </div>
+        <div className="explore-stat">
+          <div className="explore-stat-icon"><ShieldCheck size={18} /></div>
+          <div className="explore-stat-content">
+            <span className="explore-stat-value">
+              {SAMPLE_PROJECTS.reduce(
+                (s, p) => s + p.funds.reduce((fs, f) => fs + f.verified, 0),
+                0
+              )}
+            </span>
+            <span className="explore-stat-label">Verified</span>
+          </div>
         </div>
       </div>
 
@@ -87,24 +108,22 @@ export default function Explore() {
               <span className={`badge ${project.status}`}>{project.status}</span>
             </div>
 
-            <p className="project-tagline">{project.tagline}</p>
-            <p className="project-desc">{project.description}</p>
+            <div className="project-tags">
+              {project.tags.map((tag, i) => (
+                <span key={i} className={`tag tag-${i % 4}`}>{tag}</span>
+              ))}
+            </div>
 
             <div className="project-stats">
               <div className="project-stat">
                 <Lock size={12} className="icon-dim" />
                 <span className="project-stat-value">{project.totalLocked}</span>
-                <span className="project-stat-label">{project.token} locked</span>
+                <span className="project-stat-label">{project.token}</span>
               </div>
               <div className="project-stat">
                 <TrendingUp size={12} className="icon-accent" />
                 <span className="project-stat-value accent">{project.disbursed}</span>
-                <span className="project-stat-label">disbursed</span>
-              </div>
-              <div className="project-stat">
-                <ShieldCheck size={12} className="icon-dim" />
-                <span className="project-stat-value">{project.fundCount}</span>
-                <span className="project-stat-label">funds</span>
+                <span className="project-stat-label">out</span>
               </div>
             </div>
 
@@ -124,7 +143,7 @@ export default function Explore() {
             </div>
 
             <div className="project-card-footer">
-              <span className="dim">{project.rules.length} spending rules</span>
+              <span className="dim">{project.fundCount} funds</span>
               <span className="project-arrow">
                 View Details <ArrowRight size={14} />
               </span>
