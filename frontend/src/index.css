@@ -10,7 +10,7 @@
   --green: #d4ff00;
   --red: #ef4444;
   --yellow: #eab308;
-  --font-heading: 'Oswald', sans-serif;
+  --font-heading: 'Inter', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
@@ -53,8 +53,8 @@ body {
   font-weight: 700;
   color: var(--text);
   text-decoration: none;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  
+  
 }
 
 .nav-links {
@@ -68,8 +68,8 @@ body {
   font-size: 13px;
   font-weight: 500;
   transition: color 0.2s;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  
+  
 }
 
 .nav-links a:hover {
@@ -110,7 +110,7 @@ body {
   border: 1px solid var(--accent);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 3px;
+  
   color: var(--accent);
   margin-bottom: 32px;
   font-family: var(--font-mono);
@@ -122,8 +122,8 @@ body {
   font-weight: 700;
   line-height: 1.05;
   margin-bottom: 8px;
-  letter-spacing: -1px;
-  text-transform: uppercase;
+  
+  
 }
 
 .hero-sub {
@@ -165,10 +165,10 @@ body {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 3px;
+  
   color: var(--accent);
   margin-bottom: 16px;
-  text-transform: uppercase;
+  
 }
 
 .section h2 {
@@ -177,7 +177,7 @@ body {
   font-weight: 700;
   margin-bottom: 16px;
   letter-spacing: -0.5px;
-  text-transform: uppercase;
+  
   line-height: 1.1;
 }
 
@@ -222,8 +222,8 @@ body {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  
+  
 }
 
 .problem-card p {
@@ -278,8 +278,8 @@ body {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  
+  
 }
 
 .flow-content p {
@@ -315,8 +315,8 @@ body {
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  
+  
 }
 
 .feature-card p {
@@ -347,8 +347,8 @@ body {
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  
+  
 }
 
 .usecase-card p {
@@ -369,7 +369,7 @@ body {
   font-size: 48px;
   font-weight: 700;
   margin-bottom: 16px;
-  text-transform: uppercase;
+  
 }
 
 .cta-section p {
@@ -385,7 +385,7 @@ body {
   border-top: 1px solid var(--border);
   font-size: 13px;
   color: var(--text-dim);
-  letter-spacing: 0.5px;
+  
 }
 
 .footer-sub {
@@ -411,8 +411,8 @@ body {
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  
+  
 }
 
 .card h3 {
@@ -421,8 +421,8 @@ body {
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  
+  
 }
 
 /* Stats row */
@@ -443,8 +443,8 @@ body {
 .stat .label {
   font-family: var(--font-mono);
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  
+  
   color: var(--text-dim);
   margin-bottom: 4px;
   font-weight: 500;
@@ -487,8 +487,8 @@ body {
   color: var(--text-dim);
   font-weight: 500;
   font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  
+  
 }
 
 /* Status badges */
@@ -498,8 +498,8 @@ body {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  
+  
 }
 
 .badge.verified {
@@ -539,8 +539,8 @@ body {
   font-weight: 500;
   margin-bottom: 6px;
   color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  
+  
 }
 
 .form-group input,
@@ -579,8 +579,8 @@ body {
   transition: all 0.2s;
   text-decoration: none;
   text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  
+  
 }
 
 .btn-primary {
