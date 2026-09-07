@@ -10,7 +10,6 @@
   --green: #d4ff00;
   --red: #ef4444;
   --yellow: #eab308;
-  --font-heading: 'Inter', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
@@ -31,6 +30,11 @@ body {
 
 .app {
   min-height: 100vh;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 100%, rgba(255, 255, 255, 0.02) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 30%),
+    var(--bg);
 }
 
 /* Navbar */
@@ -40,21 +44,19 @@ body {
   justify-content: space-between;
   padding: 16px 32px;
   border-bottom: 1px solid var(--border);
-  background: var(--bg);
+  background: rgba(0, 0, 0, 0.8);
   position: sticky;
   top: 0;
   z-index: 50;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
 }
 
 .logo {
-  font-family: var(--font-heading);
-  font-size: 20px;
+  font-family: var(--font-body);
+  font-size: 15px;
   font-weight: 700;
   color: var(--text);
   text-decoration: none;
-  
-  
 }
 
 .nav-links {
@@ -68,8 +70,6 @@ body {
   font-size: 13px;
   font-weight: 500;
   transition: color 0.2s;
-  
-  
 }
 
 .nav-links a:hover {
@@ -102,28 +102,40 @@ body {
   padding: 100px 32px 80px;
   max-width: 900px;
   margin: 0 auto;
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(212, 255, 0, 0.06) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .hero-badge {
   display: inline-block;
   padding: 6px 16px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 600;
-  
+  font-weight: 500;
+  letter-spacing: 2px;
   color: var(--accent);
   margin-bottom: 32px;
-  font-family: var(--font-mono);
 }
 
 .hero h1 {
-  font-family: var(--font-heading);
-  font-size: 64px;
+  font-family: var(--font-body);
+  font-size: 56px;
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1.1;
   margin-bottom: 8px;
-  
-  
+  letter-spacing: -2px;
 }
 
 .hero-sub {
@@ -141,7 +153,7 @@ body {
 .hero-desc {
   font-size: 17px;
   color: var(--text-dim);
-  max-width: 580px;
+  max-width: 560px;
   margin: 0 auto 40px;
   line-height: 1.7;
 }
@@ -165,26 +177,24 @@ body {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
-  
+  letter-spacing: 2px;
   color: var(--accent);
   margin-bottom: 16px;
-  
 }
 
 .section h2 {
-  font-family: var(--font-heading);
-  font-size: 40px;
+  font-family: var(--font-body);
+  font-size: 36px;
   font-weight: 700;
   margin-bottom: 16px;
-  letter-spacing: -0.5px;
-  
-  line-height: 1.1;
+  letter-spacing: -1px;
+  line-height: 1.15;
 }
 
 .section-desc {
   font-size: 16px;
   color: var(--text-dim);
-  max-width: 700px;
+  max-width: 660px;
   margin: 0 auto 48px;
   line-height: 1.7;
 }
@@ -200,7 +210,7 @@ body {
 .problem-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
+  gap: 1px;
   max-width: 900px;
   margin: 0 auto;
   background: var(--border);
@@ -213,17 +223,15 @@ body {
 }
 
 .problem-icon {
-  font-size: 28px;
+  font-size: 24px;
   margin-bottom: 16px;
 }
 
 .problem-card h3 {
-  font-family: var(--font-heading);
-  font-size: 18px;
+  font-family: var(--font-body);
+  font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
-  
-  
 }
 
 .problem-card p {
@@ -254,9 +262,9 @@ body {
 }
 
 .flow-num {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
   background: var(--bg-input);
   border: 1px solid var(--border);
   display: flex;
@@ -264,7 +272,7 @@ body {
   justify-content: center;
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .flow-step.highlight .flow-num {
@@ -274,12 +282,10 @@ body {
 }
 
 .flow-content h3 {
-  font-family: var(--font-heading);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
   font-weight: 600;
   margin-bottom: 4px;
-  
-  
 }
 
 .flow-content p {
@@ -289,16 +295,16 @@ body {
 
 .flow-arrow {
   text-align: center;
-  color: var(--border);
-  font-size: 20px;
-  padding: 8px 0;
+  color: #222;
+  font-size: 16px;
+  padding: 6px 0;
 }
 
 /* Feature grid */
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2px;
+  gap: 1px;
   max-width: 800px;
   margin: 0 auto;
   background: var(--border);
@@ -311,12 +317,10 @@ body {
 }
 
 .feature-card h3 {
-  font-family: var(--font-heading);
-  font-size: 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
   font-weight: 600;
   margin-bottom: 8px;
-  
-  
 }
 
 .feature-card p {
@@ -329,7 +333,7 @@ body {
 .usecase-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2px;
+  gap: 1px;
   max-width: 1000px;
   margin: 0 auto;
   background: var(--border);
@@ -342,13 +346,11 @@ body {
 }
 
 .usecase-card h3 {
-  font-family: var(--font-heading);
-  font-size: 15px;
+  font-family: var(--font-body);
+  font-size: 14px;
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--accent);
-  
-  
 }
 
 .usecase-card p {
@@ -362,20 +364,35 @@ body {
   text-align: center;
   padding: 100px 32px;
   border-top: 1px solid var(--border);
+  position: relative;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 400px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(212, 255, 0, 0.05) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .cta-section h2 {
-  font-family: var(--font-heading);
-  font-size: 48px;
+  font-family: var(--font-body);
+  font-size: 40px;
   font-weight: 700;
   margin-bottom: 16px;
-  
+  letter-spacing: -1.5px;
+  position: relative;
 }
 
 .cta-section p {
   font-size: 18px;
   color: var(--text-dim);
   margin-bottom: 32px;
+  position: relative;
 }
 
 /* Footer */
@@ -385,13 +402,13 @@ body {
   border-top: 1px solid var(--border);
   font-size: 13px;
   color: var(--text-dim);
-  
 }
 
 .footer-sub {
+  font-family: var(--font-mono);
   font-size: 11px;
   margin-top: 4px;
-  color: #444;
+  color: #333;
 }
 
 /* ──────────────────────────────────────────────
@@ -403,34 +420,31 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   padding: 24px;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .card h2 {
-  font-family: var(--font-heading);
-  font-size: 20px;
+  font-family: var(--font-body);
+  font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
-  
-  
 }
 
 .card h3 {
-  font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
   margin-bottom: 12px;
   color: var(--text-dim);
-  
-  
+  letter-spacing: 1px;
 }
 
 /* Stats row */
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 2px;
-  margin-bottom: 2px;
+  gap: 1px;
+  margin-bottom: 1px;
   background: var(--border);
 }
 
@@ -443,17 +457,18 @@ body {
 .stat .label {
   font-family: var(--font-mono);
   font-size: 10px;
-  
-  
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   color: var(--text-dim);
   margin-bottom: 4px;
   font-weight: 500;
 }
 
 .stat .value {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-size: 32px;
   font-weight: 700;
+  letter-spacing: -1px;
 }
 
 .stat .value.green {
@@ -487,8 +502,7 @@ body {
   color: var(--text-dim);
   font-weight: 500;
   font-size: 10px;
-  
-  
+  letter-spacing: 1.5px;
 }
 
 /* Status badges */
@@ -498,8 +512,7 @@ body {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  
-  
+  letter-spacing: 0.5px;
 }
 
 .badge.verified {
@@ -539,8 +552,7 @@ body {
   font-weight: 500;
   margin-bottom: 6px;
   color: var(--text-dim);
-  
-  
+  letter-spacing: 1.5px;
 }
 
 .form-group input,
@@ -572,15 +584,13 @@ body {
   display: inline-block;
   padding: 12px 28px;
   border: none;
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
   text-align: center;
-  
-  
 }
 
 .btn-primary {
@@ -615,22 +625,23 @@ body {
 
 .btn-small {
   padding: 8px 16px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* Campaign selector */
 .campaign-selector {
   display: flex;
-  gap: 2px;
+  gap: 1px;
   align-items: center;
   margin-bottom: 24px;
+  background: var(--border);
 }
 
 .campaign-selector input {
   flex: 1;
   padding: 12px 14px;
   background: var(--bg-input);
-  border: 1px solid var(--border);
+  border: none;
   color: var(--text);
   font-size: 14px;
   font-family: var(--font-body);
@@ -648,6 +659,7 @@ body {
   color: var(--text-dim);
   max-height: 200px;
   overflow-y: auto;
+  line-height: 1.7;
 }
 
 /* Toast */
