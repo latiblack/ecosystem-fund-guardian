@@ -6,14 +6,13 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 export default function CreateCampaign() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    campaignId: "",
+    fundId: "",
+    project: "",
     rules: "",
-    maxPerRecipient: "",
-    durationDays: 30,
+    maxPerDisbursement: "",
+    durationDays: 90,
     requiredDeliverables: "",
-    recipients: "",
-    token: "",
-    fundAmount: "",
+    authorizedRecipients: "",
   });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -25,31 +24,30 @@ export default function CreateCampaign() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.campaignId || !form.rules) {
-      showToast("Campaign ID and rules are required", "error");
+    if (!form.fundId || !form.rules) {
+      showToast("Fund ID and spending rules are required", "error");
       return;
     }
 
     setLoading(true);
     try {
-      // Step 1: Create campaign on governance contract
       const res = await fetch(`${API}/api/campaign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId: form.campaignId,
+          campaignId: form.fundId,
           rules: form.rules,
-          maxPerRecipient: form.maxPerRecipient || "0",
-          durationDays: Number(form.durationDays) || 30,
+          maxPerRecipient: form.maxPerDisbursement || "0",
+          durationDays: Number(form.durationDays) || 90,
           requiredDeliverables: form.requiredDeliverables,
-          recipients: form.recipients,
+          recipients: form.authorizedRecipients,
         }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
 
-      showToast("Campaign created!");
-      setTimeout(() => navigate(`/campaign/${form.campaignId}`), 1500);
+      showToast("Ecosystem fund locked with governance rules!");
+      setTimeout(() => navigate(`/fund/${form.fundId}`), 1500);
     } catch (err) {
       showToast(err.message, "error");
     } finally {
@@ -62,41 +60,53 @@ export default function CreateCampaign() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 24 }}>Create Campaign</h1>
+      <h1 style={{ marginBottom: 8 }}>Lock Ecosystem Fund</h1>
+      <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
+        Define what your ecosystem fund can be spent on. Every future disbursement will be verified against these rules by AI consensus.
+      </p>
 
       <form onSubmit={handleSubmit} className="card" style={{ maxWidth: 700 }}>
         <div className="form-group">
-          <label>Campaign ID *</label>
+          <label>Fund ID *</label>
           <input
-            placeholder="e.g. creator-marketing-sep2026"
-            value={form.campaignId}
-            onChange={update("campaignId")}
+            placeholder="e.g. projectx-ecosystem-q4-2026"
+            value={form.fundId}
+            onChange={update("fundId")}
           />
         </div>
 
         <div className="form-group">
-          <label>Rules (natural language) *</label>
+          <label>Project Name</label>
+          <input
+            placeholder="e.g. ProjectX"
+            value={form.project}
+            onChange={update("project")}
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Spending Rules (what this fund can be used for) *</label>
           <textarea
-            placeholder={`e.g.\nThis is a creator marketing campaign.\nEach creator must publish one social media post mentioning "ProjectX".\nThe post must contain the campaign hashtag #BuildWithX.\nThe post must be published during the campaign period.`}
+            placeholder={`e.g.\nThis ecosystem fund is for growing the ProjectX community.\nApproved uses:\n- Marketing campaigns (creator content, social media, AMAs)\n- Developer grants and hackathon prizes\n- Community bounties and rewards\n- Partnership integrations\n\nNOT approved:\n- Team compensation\n- Operational expenses\n- Token buybacks`}
             value={form.rules}
             onChange={update("rules")}
-            rows={6}
+            rows={8}
           />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           <div className="form-group">
-            <label>Max per recipient</label>
+            <label>Max per disbursement</label>
             <input
               type="number"
-              placeholder="e.g. 2000"
-              value={form.maxPerRecipient}
-              onChange={update("maxPerRecipient")}
+              placeholder="e.g. 5000"
+              value={form.maxPerDisbursement}
+              onChange={update("maxPerDisbursement")}
             />
           </div>
 
           <div className="form-group">
-            <label>Duration (days)</label>
+            <label>Audit period (days)</label>
             <input
               type="number"
               value={form.durationDays}
@@ -106,26 +116,26 @@ export default function CreateCampaign() {
         </div>
 
         <div className="form-group">
-          <label>Required deliverables</label>
+          <label>Required deliverables for each disbursement</label>
           <input
-            placeholder="e.g. 1 social media post with project mention"
+            placeholder="e.g. Proof of deliverable (URL to content, report, or work product)"
             value={form.requiredDeliverables}
             onChange={update("requiredDeliverables")}
           />
         </div>
 
         <div className="form-group">
-          <label>Approved recipients (comma-separated addresses)</label>
+          <label>Authorized recipients (wallet addresses, comma-separated)</label>
           <textarea
             placeholder="0xabc..., 0xdef..., 0x123..."
-            value={form.recipients}
-            onChange={update("recipients")}
+            value={form.authorizedRecipients}
+            onChange={update("authorizedRecipients")}
             rows={3}
           />
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Creating..." : "Create Campaign"}
+          {loading ? "Locking Fund..." : "Lock Ecosystem Fund"}
         </button>
       </form>
 

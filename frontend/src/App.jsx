@@ -13,9 +13,9 @@ export default function App() {
             🛡️ Ecosystem Fund Guardian
           </Link>
           <div className="nav-links">
-            <Link to="/">Dashboard</Link>
-            <Link to="/create">Create Campaign</Link>
-            <Link to="/submit">Submit Evidence</Link>
+            <Link to="/">Audit Dashboard</Link>
+            <Link to="/create">Lock Fund</Link>
+            <Link to="/submit">Request Disbursement</Link>
           </div>
         </nav>
         <main className="main">
@@ -23,7 +23,7 @@ export default function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/create" element={<CreateCampaign />} />
             <Route path="/submit" element={<SubmitEvidence />} />
-            <Route path="/campaign/:id" element={<Dashboard />} />
+            <Route path="/fund/:id" element={<Dashboard />} />
           </Routes>
         </main>
       </div>

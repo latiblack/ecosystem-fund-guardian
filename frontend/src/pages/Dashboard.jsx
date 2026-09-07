@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 export default function Dashboard() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [campaignId, setCampaignId] = useState(id || "");
+  const [fundId, setFundId] = useState(id || "");
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
@@ -19,10 +19,10 @@ export default function Dashboard() {
   };
 
   const loadDashboard = async () => {
-    if (!campaignId) return;
+    if (!fundId) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/dashboard/${campaignId}`);
+      const res = await fetch(`${API}/api/dashboard/${fundId}`);
       const json = await res.json();
       if (json.error) throw new Error(json.error);
       setData(json);
@@ -34,19 +34,17 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (id) {
-      setCampaignId(id);
-    }
+    if (id) setFundId(id);
   }, [id]);
 
   useEffect(() => {
-    if (campaignId) loadDashboard();
-  }, [campaignId]);
+    if (fundId) loadDashboard();
+  }, [fundId]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (campaignId) {
-      navigate(`/campaign/${campaignId}`);
+    if (fundId) {
+      navigate(`/fund/${fundId}`);
       loadDashboard();
     }
   };
@@ -58,12 +56,11 @@ export default function Dashboard() {
       const res = await fetch(`${API}/api/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaignId, recipient }),
+        body: JSON.stringify({ campaignId: fundId, recipient }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      showToast("Verification submitted — may take 5-10 min");
-      // Poll for result
+      showToast("Verification submitted — AI consensus may take 5-10 min");
       setTimeout(loadDashboard, 15000);
       setTimeout(loadDashboard, 30000);
       setTimeout(loadDashboard, 60000);
@@ -81,11 +78,11 @@ export default function Dashboard() {
       const res = await fetch(`${API}/api/pay`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaignId, recipient, amount }),
+        body: JSON.stringify({ campaignId: fundId, recipient, amount }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
-      showToast(`Paid ${amount} to ${recipient}`);
+      showToast(`Disbursement of ${amount} released to ${recipient}`);
       loadDashboard();
     } catch (err) {
       showToast(err.message, "error");
@@ -104,93 +101,115 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 24 }}>Ecosystem Fund Guardian</h1>
+      <h1 style={{ marginBottom: 8 }}>Ecosystem Fund Audit</h1>
+      <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
+        Transparent, AI-verified ecosystem fund accountability. Every disbursement requires proof. No proof = funds stay locked.
+      </p>
 
-      {/* Campaign selector */}
+      {/* Fund selector */}
       <form onSubmit={handleSearch} className="campaign-selector">
         <input
           type="text"
-          placeholder="Enter campaign ID..."
-          value={campaignId}
-          onChange={(e) => setCampaignId(e.target.value)}
+          placeholder="Enter ecosystem fund ID to audit..."
+          value={fundId}
+          onChange={(e) => setFundId(e.target.value)}
         />
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Loading..." : "Load"}
+          {loading ? "Loading..." : "Audit Fund"}
         </button>
       </form>
 
       {!campaign && !loading && (
         <div className="empty">
-          <p>Enter a campaign ID to view its dashboard</p>
-          <p style={{ marginTop: 12, fontSize: 13 }}>
-            Or{" "}
-            <a href="/create" style={{ color: "var(--accent)" }}>
-              create a new campaign
-            </a>
+          <h2 style={{ marginBottom: 12 }}>No Fund Selected</h2>
+          <p>Enter a fund ID to view its audit trail, or lock a new ecosystem fund.</p>
+          <p style={{ marginTop: 16, fontSize: 13 }}>
+            <a href="/create" style={{ color: "var(--accent)" }}>Lock Ecosystem Fund →</a>
           </p>
         </div>
       )}
 
       {campaign && (
         <>
-          {/* Stats */}
+          {/* Compliance banner */}
+          <div className="card" style={{
+            borderColor: rejectedCount > 0 ? "var(--red)" : verifiedCount > 0 ? "var(--green)" : "var(--border)",
+            borderWidth: 2,
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <h2 style={{ marginBottom: 4 }}>
+                  {campaign.id}
+                </h2>
+                <span className={`badge ${campaign.status}`}>{campaign.status}</span>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 12, color: "var(--text-dim)", textTransform: "uppercase" }}>Compliance Status</div>
+                <div style={{
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: rejectedCount > 0 ? "var(--red)" : verifiedCount > 0 ? "var(--green)" : "var(--yellow)",
+                }}>
+                  {rejectedCount > 0 ? "VIOLATIONS DETECTED" : verifiedCount > 0 ? "COMPLIANT" : "PENDING REVIEW"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Fund stats */}
           <div className="stats">
             <div className="stat">
-              <div className="label">Budget</div>
+              <div className="label">Total Fund Locked</div>
               <div className="value">{funds?.deposited || 0}</div>
             </div>
             <div className="stat">
-              <div className="label">Spent</div>
+              <div className="label">Disbursed</div>
               <div className="value green">{funds?.spent || 0}</div>
             </div>
             <div className="stat">
-              <div className="label">Remaining</div>
+              <div className="label">Remaining (Locked)</div>
               <div className="value">{funds?.remaining || 0}</div>
             </div>
             <div className="stat">
-              <div className="label">Verified</div>
+              <div className="label">Verified Disbursements</div>
               <div className="value green">{verifiedCount}</div>
             </div>
             <div className="stat">
-              <div className="label">Rejected</div>
+              <div className="label">Rejected (No Proof)</div>
               <div className="value red">{rejectedCount}</div>
             </div>
             <div className="stat">
-              <div className="label">Pending</div>
+              <div className="label">Awaiting Verification</div>
               <div className="value yellow">{pendingCount}</div>
             </div>
           </div>
 
-          {/* Campaign info */}
+          {/* Fund Policy */}
           <div className="card">
-            <h2>Campaign: {campaign.id}</h2>
+            <h2>Fund Policy (Governance Rules)</h2>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
               <div>
-                <h3>Rules</h3>
-                <div className="rules-box">{campaign.rules || "No rules set"}</div>
+                <h3>Approved Spending Rules</h3>
+                <div className="rules-box">{campaign.rules || "No rules defined"}</div>
               </div>
               <div>
-                <h3>Details</h3>
+                <h3>Fund Parameters</h3>
                 <div style={{ fontSize: 14, lineHeight: 2 }}>
                   <div>
-                    <span style={{ color: "var(--text-dim)" }}>Status: </span>
-                    <span className={`badge ${campaign.status}`}>{campaign.status}</span>
+                    <span style={{ color: "var(--text-dim)" }}>Max per disbursement: </span>
+                    <strong>{campaign.max_per_recipient || "Unlimited"}</strong>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-dim)" }}>Max per recipient: </span>
-                    {campaign.max_per_recipient}
+                    <span style={{ color: "var(--text-dim)" }}>Audit period: </span>
+                    <strong>{campaign.duration_days} days</strong>
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-dim)" }}>Duration: </span>
-                    {campaign.duration_days} days
-                  </div>
-                  <div>
-                    <span style={{ color: "var(--text-dim)" }}>Deliverables: </span>
+                    <span style={{ color: "var(--text-dim)" }}>Required deliverables: </span>
                     {campaign.required_deliverables || "None specified"}
                   </div>
                   <div>
-                    <span style={{ color: "var(--text-dim)" }}>Creator: </span>
-                    <span style={{ fontSize: 12, wordBreak: "break-all" }}>
+                    <span style={{ color: "var(--text-dim)" }}>Locked by: </span>
+                    <span style={{ fontSize: 12, wordBreak: "break-all", fontFamily: "monospace" }}>
                       {campaign.creator}
                     </span>
                   </div>
@@ -199,16 +218,14 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Submissions table */}
+          {/* Disbursement Audit Trail */}
           <div className="card">
-            <h2>Submissions</h2>
+            <h2>Disbursement Audit Trail</h2>
             {submissions.length === 0 ? (
               <div className="empty">
-                <p>No submissions yet</p>
+                <p>No disbursement requests yet</p>
                 <p style={{ marginTop: 12, fontSize: 13 }}>
-                  <a href="/submit" style={{ color: "var(--accent)" }}>
-                    Submit evidence
-                  </a>
+                  <a href="/submit" style={{ color: "var(--accent)" }}>Submit a disbursement request →</a>
                 </p>
               </div>
             ) : (
@@ -216,10 +233,10 @@ export default function Dashboard() {
                 <thead>
                   <tr>
                     <th>Recipient</th>
-                    <th>Evidence URL</th>
-                    <th>Status</th>
-                    <th>Reason</th>
-                    <th>Actions</th>
+                    <th>Evidence (URL)</th>
+                    <th>Verification</th>
+                    <th>AI Verdict</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -239,7 +256,9 @@ export default function Dashboard() {
                         </a>
                       </td>
                       <td>
-                        <span className={`badge ${s.status}`}>{s.status}</span>
+                        <span className={`badge ${s.status}`}>
+                          {s.status === "verified" ? "PROOF ACCEPTED" : s.status === "rejected" ? "PROOF REJECTED" : "AWAITING PROOF"}
+                        </span>
                       </td>
                       <td style={{ fontSize: 13, color: "var(--text-dim)", maxWidth: 200 }}>
                         {s.reason || "—"}
@@ -251,26 +270,22 @@ export default function Dashboard() {
                             onClick={() => handleVerify(s.recipient)}
                             disabled={verifying[s.recipient.toLowerCase()]}
                           >
-                            {verifying[s.recipient.toLowerCase()]
-                              ? "Verifying..."
-                              : "Verify"}
+                            {verifying[s.recipient.toLowerCase()] ? "Verifying..." : "Verify Proof"}
                           </button>
                         )}
                         {s.status === "verified" && (
                           <button
                             className="btn btn-primary btn-small"
-                            onClick={() =>
-                              handlePay(s.recipient, funds?.max_per_recipient || 0)
-                            }
+                            onClick={() => handlePay(s.recipient, funds?.max_per_recipient || 0)}
                             disabled={paying[s.recipient.toLowerCase()]}
                             style={{ background: "var(--green)" }}
                           >
-                            {paying[s.recipient.toLowerCase()] ? "Paying..." : "Pay"}
+                            {paying[s.recipient.toLowerCase()] ? "Releasing..." : "Release Funds"}
                           </button>
                         )}
                         {s.status === "rejected" && (
-                          <span style={{ color: "var(--red)", fontSize: 13 }}>
-                            Locked
+                          <span style={{ color: "var(--red)", fontSize: 13, fontWeight: 600 }}>
+                            FUNDS LOCKED
                           </span>
                         )}
                       </td>
@@ -280,10 +295,21 @@ export default function Dashboard() {
               </table>
             )}
           </div>
+
+          {/* How it works */}
+          <div className="card" style={{ borderColor: "var(--accent)" }}>
+            <h2>How Fund Governance Works</h2>
+            <div style={{ fontSize: 14, lineHeight: 1.8, color: "var(--text-dim)" }}>
+              <p><strong>1. Lock:</strong> Project deposits ecosystem tokens into a governed Spending Contract.</p>
+              <p><strong>2. Rules:</strong> A Governance Contract defines what the funds can be used for (natural language).</p>
+              <p><strong>3. Proof:</strong> Every disbursement requires verifiable evidence of deliverables.</p>
+              <p><strong>4. Verify:</strong> AI consensus reads the evidence and evaluates it against the rules.</p>
+              <p><strong>5. Release:</strong> Only verified disbursements get paid. No proof = funds stay locked.</p>
+            </div>
+          </div>
         </>
       )}
 
-      {/* Toast */}
       {toast && (
         <div className={`toast ${toast.type}`}>
           {toast.type === "success" ? "✅" : "❌"} {toast.msg}

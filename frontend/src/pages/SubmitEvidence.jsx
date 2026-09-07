@@ -6,7 +6,7 @@ const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 export default function SubmitEvidence() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    campaignId: "",
+    fundId: "",
     recipient: "",
     url: "",
   });
@@ -20,7 +20,7 @@ export default function SubmitEvidence() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.campaignId || !form.recipient || !form.url) {
+    if (!form.fundId || !form.recipient || !form.url) {
       showToast("All fields are required", "error");
       return;
     }
@@ -31,7 +31,7 @@ export default function SubmitEvidence() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId: form.campaignId,
+          campaignId: form.fundId,
           recipient: form.recipient,
           url: form.url,
         }),
@@ -39,8 +39,8 @@ export default function SubmitEvidence() {
       const json = await res.json();
       if (json.error) throw new Error(json.error);
 
-      showToast("Evidence submitted!");
-      setTimeout(() => navigate(`/campaign/${form.campaignId}`), 1500);
+      showToast("Disbursement request submitted with evidence!");
+      setTimeout(() => navigate(`/fund/${form.fundId}`), 1500);
     } catch (err) {
       showToast(err.message, "error");
     } finally {
@@ -53,20 +53,23 @@ export default function SubmitEvidence() {
 
   return (
     <div>
-      <h1 style={{ marginBottom: 24 }}>Submit Evidence</h1>
+      <h1 style={{ marginBottom: 8 }}>Request Disbursement</h1>
+      <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
+        Submit evidence of your deliverable. AI consensus will verify it against the fund's spending rules. Funds are only released if the proof is accepted.
+      </p>
 
       <form onSubmit={handleSubmit} className="card" style={{ maxWidth: 600 }}>
         <div className="form-group">
-          <label>Campaign ID *</label>
+          <label>Ecosystem Fund ID *</label>
           <input
-            placeholder="e.g. creator-marketing-sep2026"
-            value={form.campaignId}
-            onChange={update("campaignId")}
+            placeholder="e.g. projectx-ecosystem-q4-2026"
+            value={form.fundId}
+            onChange={update("fundId")}
           />
         </div>
 
         <div className="form-group">
-          <label>Recipient address *</label>
+          <label>Recipient Wallet Address *</label>
           <input
             placeholder="0x..."
             value={form.recipient}
@@ -77,17 +80,18 @@ export default function SubmitEvidence() {
         <div className="form-group">
           <label>Evidence URL *</label>
           <input
-            placeholder="https://x.com/user/status/..."
+            placeholder="https://..."
             value={form.url}
             onChange={update("url")}
           />
           <p style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 6 }}>
-            URL to your deliverable — social media post, blog, GitHub PR, etc.
+            URL to proof of your deliverable — social media post, blog, GitHub PR, report, etc.
+            AI consensus will read this URL and verify it matches the fund's spending rules.
           </p>
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Submitting..." : "Submit Evidence"}
+          {loading ? "Submitting..." : "Submit Disbursement Request"}
         </button>
       </form>
 
