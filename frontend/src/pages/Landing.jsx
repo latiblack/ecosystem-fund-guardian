@@ -39,7 +39,7 @@ export default function Landing() {
           <Link to="/create" className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
           </Link>
-          <Link to="/audit" className="btn btn-outline btn-lg">
+          <Link to="/explore" className="btn btn-outline btn-lg">
             View Audit Dashboard
           </Link>
         </div>

@@ -268,6 +268,24 @@ class EcosystemFundGovernance(gl.Contract):
         return results
 
     @gl.public.view
+    def get_all_campaigns(self) -> list:
+        results = []
+        for key in self.campaigns.keys():
+            c = self.campaigns[key]
+            results.append({
+                "id": c.id,
+                "creator": c.creator,
+                "rules": c.rules,
+                "max_per_recipient": c.max_per_recipient,
+                "duration_days": c.duration_days,
+                "required_deliverables": c.required_deliverables,
+                "recipients": c.recipients,
+                "status": c.status,
+                "created_at": c.created_at,
+            })
+        return results
+
+    @gl.public.view
     def get_count(self) -> dict:
         return {
             "campaigns": len(list(self.campaigns.keys())),

@@ -118,6 +118,20 @@ app.post("/api/campaign", async (req, res) => {
   }
 });
 
+// List all campaigns
+app.get("/api/campaigns", async (req, res) => {
+  try {
+    const campaigns = await readContract(
+      GOVERNANCE_ADDRESS,
+      "get_all_campaigns",
+      []
+    );
+    res.json(campaigns);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get campaign
 app.get("/api/campaign/:id", async (req, res) => {
   try {
