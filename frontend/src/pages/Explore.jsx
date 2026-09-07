@@ -1,48 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search,
-  Coins,
-  ShieldCheck,
-  ShieldX,
-  Clock,
   ArrowRight,
-  Loader2,
-  Plus,
   Lock,
+  TrendingUp,
+  ShieldCheck,
+  ExternalLink,
 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
+import { SAMPLE_PROJECTS } from "../data/sampleProjects";
 
 export default function Explore() {
-  const [funds, setFunds] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    loadFunds();
-  }, []);
-
-  const loadFunds = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API}/api/campaigns`);
-      const json = await res.json();
-      setFunds(Array.isArray(json) ? json : []);
-    } catch {
-      setFunds([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filtered = funds.filter((f) => {
+  const filtered = SAMPLE_PROJECTS.filter((p) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      f.id?.toLowerCase().includes(q) ||
-      f.rules?.toLowerCase().includes(q) ||
-      f.creator?.toLowerCase().includes(q)
+      p.name.toLowerCase().includes(q) ||
+      p.tagline.toLowerCase().includes(q) ||
+      p.chain.toLowerCase().includes(q)
     );
   });
 
@@ -52,11 +29,11 @@ export default function Explore() {
         <div>
           <h1>Ecosystem Funds</h1>
           <p className="dim">
-            Browse ecosystem funds locked by projects. Every disbursement, every rule, every verdict — transparent to your community.
+            Browse projects with locked ecosystem funds. Every disbursement is publicly verified by AI consensus.
           </p>
         </div>
         <Link to="/create" className="btn btn-primary">
-          <Plus size={16} /> Lock Fund
+          <Lock size={16} /> Lock Fund
         </Link>
       </div>
 
@@ -64,63 +41,97 @@ export default function Explore() {
         <Search size={16} />
         <input
           type="text"
-          placeholder="Search by fund name, rules, or creator..."
+          placeholder="Search by project name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {loading && (
+      {/* Stats bar */}
+      <div className="explore-stats">
+        <div className="explore-stat">
+          <span className="explore-stat-value">{SAMPLE_PROJECTS.length}</span>
+          <span className="explore-stat-label">Projects</span>
+        </div>
+        <div className="explore-stat">
+          <span className="explore-stat-value">
+            {SAMPLE_PROJECTS.reduce((s, p) => s + p.fundCount, 0)}
+          </span>
+          <span className="explore-stat-label">Active Funds</span>
+        </div>
+        <div className="explore-stat">
+          <span className="explore-stat-value">
+            ${SAMPLE_PROJECTS.reduce((s, p) => s + parseFloat(p.totalLocked.replace(/,/g, "")), 0).toLocaleString()}
+          </span>
+          <span className="explore-stat-label">Total Locked</span>
+        </div>
+      </div>
+
+      {filtered.length === 0 && (
         <div className="empty-state">
-          <Loader2 size={32} className="spin icon-dim" />
-          <p>Loading funds...</p>
+          <Search size={48} className="icon-dim" />
+          <h2>No projects found</h2>
+          <p>Try a different search term</p>
         </div>
       )}
 
-      {!loading && filtered.length === 0 && (
-        <div className="empty-state">
-          <Coins size={48} className="icon-dim" />
-          <h2>No funds found</h2>
-          <p>{search ? "Try a different search term" : "Be the first to make your ecosystem fund transparent"}</p>
-          {!search && (
-            <Link to="/create" className="btn btn-primary" style={{ marginTop: 12 }}>
-              <Lock size={16} /> Lock Your Fund
-            </Link>
-          )}
-        </div>
-      )}
+      <div className="project-grid">
+        {filtered.map((project) => (
+          <Link to={`/project/${project.id}`} key={project.id} className="project-card">
+            <div className="project-card-header">
+              <div className="project-logo">{project.logo}</div>
+              <div className="project-info">
+                <h3>{project.name}</h3>
+                <span className="project-chain">{project.chain}</span>
+              </div>
+              <span className={`badge ${project.status}`}>{project.status}</span>
+            </div>
 
-      {!loading && filtered.length > 0 && (
-        <div className="fund-grid">
-          {filtered.map((fund) => (
-            <Link to={`/fund/${fund.id}`} key={fund.id} className="fund-card">
-              <div className="fund-card-header">
-                <h3>{fund.id}</h3>
-                <span className={`badge ${fund.status}`}>{fund.status}</span>
+            <p className="project-tagline">{project.tagline}</p>
+            <p className="project-desc">{project.description}</p>
+
+            <div className="project-stats">
+              <div className="project-stat">
+                <Lock size={12} className="icon-dim" />
+                <span className="project-stat-value">{project.totalLocked}</span>
+                <span className="project-stat-label">{project.token} locked</span>
               </div>
-              <p className="fund-rules">
-                {fund.rules?.length > 120 ? fund.rules.slice(0, 120) + "..." : fund.rules}
-              </p>
-              <div className="fund-meta">
-                <span className="fund-meta-item">
-                  <Clock size={12} /> {fund.duration_days} days
-                </span>
-                <span className="fund-meta-item">
-                  Max: {fund.max_per_recipient || "—"}
-                </span>
+              <div className="project-stat">
+                <TrendingUp size={12} className="icon-accent" />
+                <span className="project-stat-value accent">{project.disbursed}</span>
+                <span className="project-stat-label">disbursed</span>
               </div>
-              <div className="fund-card-footer">
-                <span className="dim mono" style={{ fontSize: 11 }}>
-                  {fund.creator?.slice(0, 8)}...{fund.creator?.slice(-6)}
-                </span>
-                <span className="fund-arrow">
-                  View Fund <ArrowRight size={14} />
-                </span>
+              <div className="project-stat">
+                <ShieldCheck size={12} className="icon-dim" />
+                <span className="project-stat-value">{project.fundCount}</span>
+                <span className="project-stat-label">funds</span>
               </div>
-            </Link>
-          ))}
-        </div>
-      )}
+            </div>
+
+            {/* Mini progress bar */}
+            <div className="project-progress">
+              <div className="project-progress-bar">
+                <div
+                  className="project-progress-fill"
+                  style={{
+                    width: `${(parseFloat(project.disbursed.replace(/,/g, "")) / parseFloat(project.totalLocked.replace(/,/g, ""))) * 100}%`,
+                  }}
+                />
+              </div>
+              <span className="project-progress-label">
+                {Math.round((parseFloat(project.disbursed.replace(/,/g, "")) / parseFloat(project.totalLocked.replace(/,/g, ""))) * 100)}% disbursed
+              </span>
+            </div>
+
+            <div className="project-card-footer">
+              <span className="dim">{project.rules.length} spending rules</span>
+              <span className="project-arrow">
+                View Details <ArrowRight size={14} />
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
