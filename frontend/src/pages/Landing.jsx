@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Code,
   Calendar,
-  Zap,
 } from "lucide-react";
 
 export default function Landing() {
@@ -23,10 +22,6 @@ export default function Landing() {
     <div className="landing">
       {/* Hero */}
       <section className="hero">
-        <div className="hero-badge">
-          <Zap size={12} />
-          <span>Powered by GenLayer</span>
-        </div>
         <h1>
           Prove your ecosystem
           <br />
@@ -50,6 +45,25 @@ export default function Landing() {
             Explore Funds
           </Link>
         </div>
+      </section>
+
+      {/* Powered by GenLayer */}
+      <section className="genlayer-section">
+        <div className="genlayer-divider-top" />
+        <div className="genlayer-content">
+          <div className="genlayer-logo-wrap">
+            <img src="/genlayer-logo.jpeg" alt="GenLayer" className="genlayer-logo" />
+          </div>
+          <div className="genlayer-text">
+            <h3>Powered by GenLayer</h3>
+            <p>
+              The only blockchain where smart contracts can read URLs, understand natural language,
+              and reach AI consensus on-chain. GenLayer validators verify every disbursement
+              against your spending rules — automatically.
+            </p>
+          </div>
+        </div>
+        <div className="genlayer-divider-bottom" />
       </section>
 
       {/* Problem */}
@@ -206,9 +220,8 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="cta-section">
-        <div className="hero-badge" style={{ marginBottom: 16 }}>
-          <Zap size={12} />
-          <span>Powered by GenLayer</span>
+        <div className="genlayer-logo-wrap" style={{ marginBottom: 16 }}>
+          <img src="/genlayer-logo.jpeg" alt="GenLayer" className="genlayer-logo" />
         </div>
         <h2>Start proving.<br />Stop hoping.</h2>
         <p>Lock your ecosystem fund. Define the rules. Let GenLayer verify every payment for your community.</p>

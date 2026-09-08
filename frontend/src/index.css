@@ -173,6 +173,64 @@ a:hover { text-decoration: underline; }
   margin-bottom: 24px;
 }
 
+/* Powered by GenLayer Section */
+.genlayer-section {
+  padding: 0 24px;
+  max-width: 900px;
+  margin: 0 auto 0;
+}
+
+.genlayer-divider-top,
+.genlayer-divider-bottom {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--accent) 50%, transparent 100%);
+  opacity: 0.3;
+}
+
+.genlayer-content {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 40px 48px;
+  background: linear-gradient(135deg, rgba(212, 255, 0, 0.03) 0%, rgba(212, 255, 0, 0.01) 100%);
+}
+
+.genlayer-logo-wrap {
+  flex-shrink: 0;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 255, 0, 0.15);
+  background: rgba(212, 255, 0, 0.04);
+  overflow: hidden;
+}
+
+.genlayer-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.genlayer-text h3 {
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+
+.genlayer-text p {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.7;
+  max-width: 500px;
+}
+
 .genlayer-highlight {
   display: inline-flex;
   align-items: center;
@@ -840,6 +898,9 @@ a:hover { text-decoration: underline; }
   .hero-desc { font-size: 14px; }
   .hero-actions { flex-direction: column; }
   .hero-actions .btn { width: 100%; justify-content: center; }
+
+  .genlayer-content { flex-direction: column; text-align: center; padding: 32px 24px; gap: 20px; }
+  .genlayer-text p { max-width: 100%; }
 
   .section h2 { font-size: 24px; }
   .section-desc { font-size: 14px; }
