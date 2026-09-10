@@ -56,9 +56,9 @@ export default function Landing() {
           Your community sees exactly where the money goes.
         </p>
         <div className="hero-actions">
-          <button onClick={handleLockFund} className="btn btn-primary btn-lg">
+          <a href="/create" className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
-          </button>
+          </a>
           <a href="/explore" className="btn btn-outline btn-lg">
             Explore Funds
           </a>
