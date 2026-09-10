@@ -1,5 +1,12 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
+import { metaMask, coinbaseWallet, baseAccount, walletConnect } from "@wagmi/connectors";
+import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
+import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
