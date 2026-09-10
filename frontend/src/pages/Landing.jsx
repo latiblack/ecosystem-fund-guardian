@@ -59,9 +59,9 @@ export default function Landing() {
           <button onClick={handleLockFund} className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
           </button>
-          <Link to="/explore" className="btn btn-outline btn-lg">
+          <a href="/explore" className="btn btn-outline btn-lg">
             Explore Funds
-          </Link>
+          </a>
         </div>
       </section>
 
@@ -235,9 +235,9 @@ export default function Landing() {
         <h2>Start proving.<br />Stop hoping.</h2>
         <p>Lock your ecosystem fund. Define the rules. Let GenLayer verify every payment for your community.</p>
         <div className="hero-actions">
-          <Link to="/create" className="btn btn-primary btn-lg">
+          <a href="/create" className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
-          </Link>
+          </a>
         </div>
       </section>
 
