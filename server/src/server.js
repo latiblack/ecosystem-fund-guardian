@@ -84,30 +84,64 @@ app.get("/health", async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
+// Projects
+// ──────────────────────────────────────────────
+
+app.post("/api/project", async (req, res) => {
+  try {
+    const { project_id, name, logo_url, description, chain } = req.body;
+    if (!project_id || !name) {
+      return res.status(400).json({ error: "project_id and name required" });
+    }
+    const { hash } = await writeContract(GOVERNANCE_ADDRESS, "create_project", [
+      project_id, name, logo_url || "", description || "", chain || "GenLayer"
+    ]);
+    res.json({ success: true, txHash: hash, projectId: project_id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/projects", async (req, res) => {
+  try {
+    const projects = await readContract(GOVERNANCE_ADDRESS, "get_all_projects", []);
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/project/:id", async (req, res) => {
+  try {
+    const project = await readContract(GOVERNANCE_ADDRESS, "get_project", [req.params.id]);
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────
 // Campaigns
 // ──────────────────────────────────────────────
 
-// Create campaign
+// Create campaign (includes project_id)
 app.post("/api/campaign", async (req, res) => {
   try {
     const {
-      campaignId,
-      rules,
-      maxPerRecipient,
-      durationDays,
-      requiredDeliverables,
-      recipients,
+      campaignId, project_id, rules, maxPerRecipient,
+      durationDays, requiredDeliverables, recipients,
     } = req.body;
 
-    if (!campaignId || !rules) {
-      return res.status(400).json({ error: "campaignId and rules required" });
+    if (!campaignId || !rules || !project_id) {
+      return res.status(400).json({ error: "campaignId, project_id, and rules required" });
     }
 
     const { hash } = await writeContract(GOVERNANCE_ADDRESS, "create_campaign", [
       campaignId,
+      project_id,
       rules,
       maxPerRecipient || "0",
-      durationDays || 30,
+      durationDays || 90,
       requiredDeliverables || "",
       recipients || "",
     ]);

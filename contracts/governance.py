@@ -16,8 +16,21 @@ class Submission:
 
 @allow_storage
 @dataclass
+class Project:
+    id: str
+    name: str
+    logo_url: str
+    description: str
+    chain: str
+    creator: str
+    created_at: str
+
+
+@allow_storage
+@dataclass
 class Campaign:
     id: str
+    project_id: str
     creator: str
     rules: str
     max_per_recipient: str
@@ -31,6 +44,7 @@ class Campaign:
 class EcosystemFundGovernance(gl.Contract):
     campaigns: TreeMap[str, Campaign]
     submissions: TreeMap[str, Submission]  # key: "{campaignId}:{recipient}"
+    projects: TreeMap[str, Project]
 
     # ──────────────────────────────────────────────
     # Campaign management
@@ -40,6 +54,7 @@ class EcosystemFundGovernance(gl.Contract):
     def create_campaign(
         self,
         campaign_id: str,
+        project_id: str,
         rules: str,
         max_per_recipient: str,
         duration_days: int,
@@ -48,9 +63,12 @@ class EcosystemFundGovernance(gl.Contract):
     ) -> str:
         if campaign_id in self.campaigns:
             raise gl.vm.UserError("Campaign already exists")
+        if project_id not in self.projects:
+            raise gl.vm.UserError("Project not found")
 
         self.campaigns[campaign_id] = Campaign(
             id=campaign_id,
+            project_id=project_id,
             creator=str(gl.message.sender_address),
             rules=rules,
             max_per_recipient=max_per_recipient,
@@ -221,8 +239,12 @@ class EcosystemFundGovernance(gl.Contract):
         c = self.campaigns.get(campaign_id)
         if not c:
             return {}
+        p = self.projects.get(c.project_id)
         return {
             "id": c.id,
+            "project_id": c.project_id,
+            "project_name": p.name if p else None,
+            "project_logo": p.logo_url if p else None,
             "creator": c.creator,
             "rules": c.rules,
             "max_per_recipient": c.max_per_recipient,
@@ -291,3 +313,64 @@ class EcosystemFundGovernance(gl.Contract):
             "campaigns": len(list(self.campaigns.keys())),
             "submissions": len(list(self.submissions.keys())),
         }
+
+    # ──────────────────────────────────────────────
+    # Project views
+    # ──────────────────────────────────────────────
+
+    @gl.public.view
+    def get_project(self, project_id: str) -> dict:
+        p = self.projects.get(project_id)
+        if not p:
+            return {}
+        return {
+            "id": p.id,
+            "name": p.name,
+            "logo_url": p.logo_url,
+            "description": p.description,
+            "chain": p.chain,
+            "creator": p.creator,
+            "created_at": p.created_at,
+        }
+
+    @gl.public.view
+    def get_all_projects(self) -> list:
+        results = []
+        for key in self.projects.keys():
+            p = self.projects[key]
+            results.append({
+                "id": p.id,
+                "name": p.name,
+                "logo_url": p.logo_url,
+                "description": p.description,
+                "chain": p.chain,
+                "creator": p.creator,
+                "created_at": p.created_at,
+            })
+        return results
+
+    # ──────────────────────────────────────────────
+    # Project management
+    # ──────────────────────────────────────────────
+
+    @gl.public.write
+    def create_project(
+        self,
+        project_id: str,
+        name: str,
+        logo_url: str,
+        description: str,
+        chain: str,
+    ) -> str:
+        if project_id in self.projects:
+            raise gl.vm.UserError("Project already exists")
+        self.projects[project_id] = Project(
+            id=project_id,
+            name=name,
+            logo_url=logo_url,
+            description=description,
+            chain=chain,
+            creator=str(gl.message.sender_address),
+            created_at=str(gl.message_raw["datetime"]),
+        )
+        return "Project created"
