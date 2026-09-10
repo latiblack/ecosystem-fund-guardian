@@ -11,6 +11,7 @@ import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
 import CreateCampaign from "./pages/CreateCampaign";
 import SubmitEvidence from "./pages/SubmitEvidence";
+import { WalletProvider } from "./context/WalletContext";
 import "./index.css";
 
 // Create wagmi config
@@ -83,20 +84,22 @@ export default function App() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <BrowserRouter>
-            <div className="app">
-              <Navbar />
-              <main className="main">
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/explore" element={<Explore />} />
-                  <Route path="/project/:id" element={<ProjectDetail />} />
-                  <Route path="/create" element={<CreateCampaign />} />
-                  <Route path="/submit" element={<SubmitEvidence />} />
-                </Routes>
-              </main>
-            </div>
-          </BrowserRouter>
+          <WalletProvider>
+            <BrowserRouter>
+              <div className="app">
+                <Navbar />
+                <main className="main">
+                  <Routes>
+                    <Route path="/" element={<Landing />} />
+                    <Route path="/explore" element={<Explore />} />
+                    <Route path="/project/:id" element={<ProjectDetail />} />
+                    <Route path="/create" element={<CreateCampaign />} />
+                    <Route path="/submit" element={<SubmitEvidence />} />
+                  </Routes>
+                </main>
+              </div>
+            </BrowserRouter>
+          </WalletProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
