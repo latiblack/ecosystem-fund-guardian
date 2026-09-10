@@ -108,18 +108,19 @@ export default function CreateCampaign() {
     if (!project.name) { showToast("Project name is required", "error"); return; }
     setLoading(true);
     try {
-      await fetch(`${API}/api/campaign`, {
+      const res = await fetch(`${API}/api/project`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId: `${project.name.toLowerCase().replace(/\s+/g, "-")}-project`,
-          rules: "",
-          project: project.name,
+          project_id: project.name.toLowerCase().replace(/\s+/g, "-"),
+          name: project.name,
           description: project.description,
           chain: project.chain,
-          logo: project.logo,
+          logo_url: project.logo,
         }),
       });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       setStep(2);
     } catch (err) {
       showToast(err.message, "error");
@@ -142,19 +143,21 @@ export default function CreateCampaign() {
     }
     setLoading(true);
     try {
-      await fetch(`${API}/api/campaign`, {
+      const projectId = project.name.toLowerCase().replace(/\s+/g, "-");
+      const res = await fetch(`${API}/api/campaign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId: `${project.name.toLowerCase().replace(/\s+/g, "-")}-${category.id}`,
+          campaignId: `${projectId}-${category.id}`,
+          project_id: projectId,
           rules: fund.rules,
           maxPerRecipient: "0",
           durationDays: Number(fund.duration) || 90,
           recipients: fund.recipients,
-          project: project.name,
-          category: category.id,
         }),
       });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       setStep(4);
     } catch (err) {
       showToast(err.message, "error");
@@ -231,8 +234,8 @@ export default function CreateCampaign() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }}>
-            Next — Choose Category <ArrowRight size={16} />
+          <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }} disabled={loading}>
+            {loading ? <><Loader2 size={16} className="spin" /> Saving...</> : <><ArrowRight size={16} /> Next — Choose Category</>}
           </button>
         </form>
       )}
