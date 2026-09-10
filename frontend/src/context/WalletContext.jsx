@@ -1,27 +1,19 @@
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
+import { WalletConnectModal } from "@walletconnect/modal";
 
 const WalletContext = createContext(null);
 
-// Full EVM chain support - any valid chain ID works
-const CHAIN_CONFIG = {
-  1: { name: "Ethereum", symbol: "ETH", rpc: "https://ethereum.publicnode.com" },
-  5: { name: "Goerli", symbol: "ETH", rpc: "https://rpc.ankr.com/eth_goerli" },
-  10: { name: "Optimism", symbol: "ETH", rpc: "https://mainnet.optimism.io" },
-  420: { name: "Optimism Goerli", symbol: "ETH", rpc: "https://goerli.optimism.io" },
-  56: { name: "BNB Smart Chain", symbol: "BNB", rpc: "https://bsc-dataseed.binance.org" },
-  97: { name: "BNB Testnet", symbol: "tBNB", rpc: "https://data-seed-prebsc-1-s1.binance.org:8545" },
-  137: { name: "Polygon", symbol: "MATIC", rpc: "https://polygon-rpc.com" },
-  80001: { name: "Polygon Mumbai", symbol: "MATIC", rpc: "https://rpc-mumbai.maticvigil.com" },
-  42161: { name: "Arbitrum One", symbol: "ETH", rpc: "https://arb1.arbitrum.io/rpc" },
-  421613: { name: "Arbitrum Goerli", symbol: "ETH", rpc: "https://goerli-rollup.arbitrum.io/rpc" },
-  421614: { name: "Arbitrum Nova", symbol: "ETH", rpc: "https://nova.arbitrum.io/rpc" },
-  11155111: { name: "Sepolia", symbol: "ETH", rpc: "https://rpc.sepolia.org" },
-  43114: { name: "Avalanche C-Chain", symbol: "AVAX", rpc: "https://api.avax.network/ext/bc/C/rpc" },
-  43113: { name: "Avalanche Fuji", symbol: "AVAX", rpc: "https://api.avax-test.network/ext/bc/C/rpc" },
-  250: { name: "Fantom Opera", symbol: "FTM", rpc: "https://rpc.ftm.tools" },
-  4002: { name: "Fantom Testnet", symbol: "FTM", rpc: "https://rpc.testnet.fantom.network" },
-  100: { name: "Gnosis Chain", symbol: "xDAI", rpc: "https://rpc.gnosischain.com" },
-};
+// Supported chains for Ecosystem Fund Guardian
+const SUPPORTED_CHAINS = [
+  "eip155:1",    // Ethereum Mainnet
+  "eip155:5",    // Goerli Testnet
+  "eip155:10",   // Optimism
+  "eip155:56",   // BNB Smart Chain
+  "eip155:137",  // Polygon
+  "eip155:42161", // Arbitrum One
+  "eip155:43114", // Avalanche C-Chain
+  "eip155:11155111", // Sepolia
+];
 
 export function WalletProvider({ children }) {
   const [address, setAddress] = useState(null);
@@ -29,89 +21,133 @@ export function WalletProvider({ children }) {
   const [chainId, setChainId] = useState(null);
   const [error, setError] = useState(null);
   const [walletType, setWalletType] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Detect wallet type from provider
-  const detectWalletType = useCallback(() => {
-    if (!window.ethereum) return null;
-    if (window.ethereum.isMetaMask) return "MetaMask";
-    if (window.ethereum.isCoinbaseWallet) return "Coinbase Wallet";
-    if (window.ethereum.isRainbow) return "Rainbow";
-    if (window.ethereum.isBlockwallet) return "Blockwallet";
-    if (window.ethereum.isTaho) return "Taho";
-    if (window.ethereum.isExodus) return "Exodus";
-    return "Other EVM Wallet";
-  }, []);
+  // Initialize WalletConnect modal with project ID
+  const wcModal = new WalletConnectModal({
+    projectId: "7dbda9b31e7da7cb396ca5a5ae2f668e",
+    chains: SUPPORTED_CHAINS,
+    additionalChains: SUPPORTED_CHAINS,
+    supportedUnsafeMethods: ["personal_sign", "eth_signTypedData_v4"],
+    metadata: {
+      name: "Ecosystem Fund Guardian",
+      description: "Decentralized ecosystem fund management with GenLayer AI verification",
+      url: window.location.origin || "https://ecosystem-fund-guardian.vercel.app",
+      icons: [(window.location.origin || "https://ecosystem-fund-guardian.vercel.app") + "/nav-logo.png"],
+    },
+  });
 
-  const getChainInfo = useCallback((id) => {
-    return CHAIN_CONFIG[id] || { 
-      name: `Chain ${id}`, 
-      symbol: "Native Token",
-      rpc: null 
+  // Check for injected wallet (MetaMask, etc.)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.ethereum) {
+      // Detect wallet type
+      if (window.ethereum.isMetaMask) setWalletType("MetaMask");
+      else if (window.ethereum.isCoinbaseWallet) setWalletType("Coinbase Wallet");
+      else if (window.ethereum.isRainbow) setWalletType("Rainbow");
+      else setWalletType("Injected Wallet");
+
+      // Check initial connection
+      checkInjectedConnection();
+      setupInjectedListeners();
+    }
+
+    return () => {
+      // Cleanup listeners
+      if (window.ethereum) {
+        window.ethereum.removeListener?.("accountsChanged", () => {});
+        window.ethereum.removeListener?.("chainChanged", () => {});
+      }
     };
   }, []);
 
-  // Listen for wallet events
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.ethereum) return;
+  const checkInjectedConnection = async () => {
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      if (accounts.length > 0) {
+        setAddress(accounts[0]);
+        setIsConnected(true);
+        
+        const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
+        setChainId(parseInt(chainIdHex, 16));
+      }
+    } catch (err) {
+      console.error("Failed to check injected wallet:", err);
+    }
+  };
 
-    setWalletType(detectWalletType());
+  const setupInjectedListeners = () => {
+    if (!window.ethereum) return;
 
     const handleAccountsChanged = (accounts) => {
       if (accounts.length > 0) {
         setAddress(accounts[0]);
+        setIsConnected(true);
         setError(null);
       } else {
         setAddress(null);
-        setChainId(null);
+        setIsConnected(false);
       }
     };
 
     const handleChainChanged = (chainHex) => {
-      const id = parseInt(chainHex, 16);
-      setChainId(id);
-    };
-
-    const handleConnect = (connectInfo) => {
-      setAddress(connectInfo.account);
-      setChainId(parseInt(connectInfo.chainId, 16));
-      setError(null);
-    };
-
-    const handleDisconnect = () => {
-      setAddress(null);
-      setChainId(null);
+      setChainId(parseInt(chainHex, 16));
     };
 
     window.ethereum.on("accountsChanged", handleAccountsChanged);
     window.ethereum.on("chainChanged", handleChainChanged);
-    window.ethereum.on("connect", handleConnect);
-    window.ethereum.on("disconnect", handleDisconnect);
+  };
 
-    // Check initial state
-    window.ethereum.request({ method: "eth_accounts" })
-      .then((accounts) => {
-        if (accounts.length > 0) {
-          setAddress(accounts[0]);
+  // Connect via WalletConnect (QR code modal)
+  const connectWalletConnect = useCallback(async () => {
+    setConnecting(true);
+    setError(null);
+
+    try {
+      // Open WalletConnect modal
+      await wcModal.openModal();
+      
+      // The modal handles the connection automatically
+      // We need to listen for session events
+      
+      // Listen for session approved
+      const sessionApprovedHandler = (event) => {
+        if (event.name === "session_approved") {
+          const accounts = event.data?.accounts || [];
+          if (accounts.length > 0) {
+            const address = accounts[0];
+            const chainId = parseInt(accounts[0].split(":")[1], 16);
+            setAddress(address);
+            setChainId(chainId);
+            setIsConnected(true);
+            setWalletType("WalletConnect");
+            setError(null);
+            wcModal.closeModal();
+          }
         }
-      })
-      .catch(console.error);
+      };
 
-    window.ethereum.request({ method: "eth_chainId" })
-      .then((chainIdHex) => {
-        setChainId(parseInt(chainIdHex, 16));
-      })
-      .catch(console.error);
+      // Listen for session rejected
+      const sessionRejectedHandler = (event) => {
+        if (event.name === "session_rejected") {
+          setError("Connection rejected by wallet");
+        }
+      };
 
-    return () => {
-      window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
-      window.ethereum.removeListener("chainChanged", handleChainChanged);
-      window.ethereum.removeListener("connect", handleConnect);
-      window.ethereum.removeListener("disconnect", handleDisconnect);
-    };
-  }, [detectWalletType]);
+      // Note: WalletConnect modal handles sessions internally
+      // We just need to wait for the modal to close and check connection status
+      
+      return true;
+    } catch (err) {
+      console.error("WalletConnect failed:", err);
+      setError(err.message || "Failed to connect via WalletConnect");
+      return false;
+    } finally {
+      setConnecting(false);
+    }
+  }, []);
 
-  // Connect wallet - supports ANY EVM-compatible wallet
-  const connect = useCallback(async () => {
+  // Connect via injected wallet
+  const connectInjected = useCallback(async () => {
     if (!window.ethereum) {
       setError("No Ethereum wallet detected. Please install MetaMask or another Web3 wallet.");
       return false;
@@ -119,54 +155,62 @@ export function WalletProvider({ children }) {
 
     setConnecting(true);
     setError(null);
-    
+
     try {
-      // Request account access
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
-      
-      // Get chain ID
+
       const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
       const id = parseInt(chainIdHex, 16);
-      
-      // Validate it's a proper EVM chain
-      if (isNaN(id) || id < 1) {
-        throw new Error("Invalid EVM chain detected");
-      }
-      
+
       setAddress(accounts[0]);
       setChainId(id);
-      setWalletType(detectWalletType());
+      setIsConnected(true);
+
       return true;
     } catch (err) {
-      console.error("Wallet connection failed:", err);
-      
+      console.error("Injected wallet connection failed:", err);
       if (err.code === 4001) {
-        setError("Connection rejected. Please approve the connection in your wallet.");
-      } else if (err.code === -32002) {
-        setError("Connection request already pending. Please check your wallet.");
+        setError("Connection rejected by user.");
       } else {
-        setError(err.message || "Failed to connect wallet. Please try again.");
+        setError(err.message || "Failed to connect wallet.");
       }
       return false;
     } finally {
       setConnecting(false);
     }
-  }, [detectWalletType]);
+  }, []);
 
-  // Disconnect from wallet
+  // Main connect function - tries injected first, falls back to WalletConnect
+  const connect = useCallback(async () => {
+    // Try injected wallet first if available
+    if (window.ethereum) {
+      return await connectInjected();
+    }
+
+    // Fall back to WalletConnect
+    return await connectWalletConnect();
+  }, [connectInjected, connectWalletConnect]);
+
+  // Disconnect
   const disconnect = useCallback(() => {
     setAddress(null);
     setChainId(null);
+    setIsConnected(false);
     setWalletType(null);
     setError(null);
+
+    // Close WalletConnect modal if open
+    if (wcModal.isOpen) {
+      wcModal.closeModal();
+    }
   }, []);
 
-  // Switch to a different chain
+  // Switch chain
   const switchChain = useCallback(async (targetChainId) => {
     if (!window.ethereum) return false;
-    
+
     try {
       await window.ethereum.request({
         method: "wallet_switchEthereumChain",
@@ -175,80 +219,39 @@ export function WalletProvider({ children }) {
       return true;
     } catch (err) {
       console.error("Failed to switch chain:", err);
-      
-      // If chain doesn't exist, try to add it
-      if (err.code === 4902) {
-        const config = CHAIN_CONFIG[targetChainId];
-        if (config) {
-          try {
-            await window.ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [{
-                chainId: `0x${targetChainId.toString(16)}`,
-                chainName: config.name,
-                nativeCurrency: {
-                  name: config.symbol,
-                  symbol: config.symbol,
-                  decimals: 18,
-                },
-                rpcUrls: [config.rpc],
-                blockExplorerUrls: [
-                  targetChainId === 1 ? "https://etherscan.io" :
-                  targetChainId === 137 ? "https://polygonscan.com" :
-                  targetChainId === 56 ? "https://bscscan.com" :
-                  targetChainId === 42161 ? "https://arbiscan.io" :
-                  undefined
-                ].filter(Boolean),
-              }],
-            });
-            return true;
-          } catch (addErr) {
-            console.error("Failed to add chain:", addErr);
-            setError("Failed to add network to wallet");
-            return false;
-          }
-        }
-      }
-      
-      setError("Failed to switch network. Make sure your wallet supports this chain.");
       return false;
     }
   }, []);
 
-  // Sign a message (works on ANY EVM chain)
+  // Sign message
   const signMessage = useCallback(async (message) => {
     if (!address || !window.ethereum) {
       throw new Error("Wallet not connected");
     }
-    
-    const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
-    const currentChainId = parseInt(chainIdHex, 16);
-    
-    if (isNaN(currentChainId) || currentChainId < 1) {
-      throw new Error("Not on a valid EVM chain");
-    }
-    
+
     const signature = await window.ethereum.request({
       method: "personal_sign",
       params: [message, address],
     });
-    
+
     return signature;
   }, [address]);
 
   const value = {
     address,
     chainId,
-    chainName: chainId ? getChainInfo(chainId).name : null,
-    chainSymbol: chainId ? getChainInfo(chainId).symbol : null,
+    chainName: chainId ? `Chain ${chainId}` : null,
     walletType,
     connecting,
     error,
     connect,
+    connectWalletConnect,
+    connectInjected,
     disconnect,
     switchChain,
     signMessage,
-    isConnected: !!address,
+    isConnected,
+    wcModal,
   };
 
   return (
@@ -264,12 +267,15 @@ export function useWallet() {
   return ctx;
 }
 
-// Hook to require being on any valid EVM chain
-export function useEVMChain() {
-  const { chainId, error } = useWallet();
-  
-  // Any valid chainId is acceptable for EVM compatibility
-  const isValidChain = chainId !== null && !isNaN(chainId) && chainId >= 1;
-  
-  return { chainId, isValidChain, error };
+export function useRequireWallet() {
+  const { isConnected, connect, error } = useWallet();
+
+  const ensureConnected = useCallback(async () => {
+    if (!isConnected) {
+      await connect();
+    }
+    return isConnected;
+  }, [isConnected, connect]);
+
+  return { isConnected, ensureConnected, error };
 }

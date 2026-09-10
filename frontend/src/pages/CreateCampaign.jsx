@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useWallet, useEVMChain } from "../context/WalletContext";
+import { useWallet } from "../context/WalletContext";
 import WalletModal from "../components/WalletModal";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
@@ -112,7 +112,6 @@ export default function CreateCampaign() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const { address, connect, chainId, chainName, walletType, isConnected } = useWallet();
-  const { isValidChain } = useEVMChain();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });

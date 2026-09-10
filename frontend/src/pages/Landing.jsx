@@ -1,5 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useWallet } from "../context/WalletContext";
+import WalletModal from "../components/WalletModal";
 import {
   ShieldAlert,
   Eye,
@@ -21,14 +23,13 @@ import {
 export default function Landing() {
   const navigate = useNavigate();
   const { address, connect } = useWallet();
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
   const handleLockFund = async () => {
     if (!address) {
-      await connect();
-      if (!address) {
-        // User cancelled or failed to connect
-        return;
-      }
+      // Open wallet modal instead of direct connection
+      setShowWalletModal(true);
+      return;
     }
     navigate("/create");
   };
@@ -64,6 +65,9 @@ export default function Landing() {
           </Link>
         </div>
       </section>
+
+      {/* Wallet Modal */}
+      <WalletModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} />
 
       {/* Powered by GenLayer */}
       <section className="genlayer-section">
