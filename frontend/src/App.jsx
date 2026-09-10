@@ -44,6 +44,9 @@ const config = createConfig({
 const queryClient = new QueryClient();
 
 function Navbar() {
+  const location = window.location.pathname;
+  const isLanding = location === "/";
+
   return (
     <>
     <nav className="navbar">
@@ -56,7 +59,7 @@ function Navbar() {
         <a href="/create">Create Project</a>
         <a href="/submit">Submit Proof</a>
 
-        <ConnectButton />
+        {!isLanding && <ConnectButton />}
       </div>
     </nav>
     </>
