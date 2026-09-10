@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
-  Megaphone, Landmark, Code, Users, Calendar, Gift, AlertCircle,
+  Megaphone, Landmark, Code, Users, Calendar, Gift,
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
@@ -219,12 +219,6 @@ export default function CreateCampaign() {
       {step === 1 && (
         <form onSubmit={handleProjectSave}>
           <div className="card">
-            {!address && (
-              <div style={{ marginBottom: 24, padding: 16, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                <AlertCircle size={20} />
-                <span style={{ fontSize: 14, fontWeight: 500 }}>Conecta tu wallet para crear proyectos. Haz clic en el botón superior derecho.</span>
-              </div>
-            )}
             <h2>Create Your Project</h2>
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
               Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
@@ -297,12 +291,6 @@ export default function CreateCampaign() {
       {step === 3 && (
         <form onSubmit={handleLockSubmit}>
           <div className="card">
-            {!address && (
-              <div style={{ marginBottom: 24, padding: 16, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                <AlertCircle size={20} />
-                <span style={{ fontSize: 14, fontWeight: 500 }}>Conecta tu wallet para crear campañas.</span>
-              </div>
-            )}
             <h2>Lock Your Fund</h2>
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
               Choose a category, then fill in the fund details below.
