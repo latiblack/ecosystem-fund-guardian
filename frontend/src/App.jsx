@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-do
 import { useState } from "react";
 import { Menu, X, Wallet } from "lucide-react";
 import { WalletProvider, useWallet } from "./context/WalletContext";
+import WalletModal from "./components/WalletModal";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -11,8 +12,9 @@ import "./index.css";
 
 function Navbar() {
   const [open, setOpen] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const location = useLocation();
-  const { address, connecting, connect, disconnect } = useWallet();
+  const { address, connecting } = useWallet();
 
   const isLanding = location.pathname === "/";
   const close = () => setOpen(false);
@@ -22,6 +24,7 @@ function Navbar() {
     : null;
 
   return (
+    <>
     <nav className="navbar">
       <Link to="/" className="logo" onClick={close}>
         <img src="/nav-logo.png" alt="EFG" className="logo-img" />
@@ -39,18 +42,20 @@ function Navbar() {
         <Link to="/submit" onClick={close}>Submit Proof</Link>
 
         {shortAddr ? (
-          <button className="btn btn-wallet btn-connected" onClick={disconnect}>
+          <button className="btn btn-wallet btn-connected" onClick={() => setWalletOpen(true)}>
             <Wallet size={14} />
             <span>{shortAddr}</span>
           </button>
         ) : (
-          <button className="btn btn-wallet" onClick={connect} disabled={connecting}>
+          <button className="btn btn-wallet" onClick={() => setWalletOpen(true)} disabled={connecting}>
             <Wallet size={14} />
             <span>{connecting ? "Connecting..." : "Connect Wallet"}</span>
           </button>
         )}
       </div>
     </nav>
+    <WalletModal isOpen={walletOpen} onClose={() => setWalletOpen(false)} />
+    </>
   );
 }
 
