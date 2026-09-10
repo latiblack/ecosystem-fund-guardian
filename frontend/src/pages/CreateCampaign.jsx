@@ -160,6 +160,7 @@ export default function CreateCampaign() {
 
   const handleLockSubmit = async (e) => {
     e.preventDefault();
+    if (!address) { connect(); showToast("Please connect your wallet first", "info"); return; }
     if (!fund.token || !fund.amount || !fund.rules) {
       showToast("Token, amount, and spending rules are required", "error");
       return;
