@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
 import { metaMask, coinbaseWallet, baseAccount, walletConnect } from "@wagmi/connectors";
 import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
-import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, useConnectModal, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
 import { Menu, X, Wallet } from "lucide-react";
@@ -18,7 +18,14 @@ import "./index.css";
 // WalletConnect project ID
 const WALLETCONNECT_PROJECT_ID = "7dbda9b31e7da7cb396ca5a5ae2f668e";
 
-// Create wagmi config with explicit connectors
+// Get default wallets with our WalletConnect projectId
+const { connectors: defaultConnectors } = getDefaultWallets({
+  appName: "Ecosystem Fund Guardian",
+  projectId: WALLETCONNECT_PROJECT_ID,
+  chains: [mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia],
+});
+
+// Create wagmi config
 const config = createConfig({
   chains: [mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia],
   transports: {
@@ -30,12 +37,7 @@ const config = createConfig({
     [avalanche.id]: http(),
     [sepolia.id]: http(),
   },
-  connectors: [
-    metaMask({ shimDisconnect: true }),
-    walletConnect({ projectId: WALLETCONNECT_PROJECT_ID }),
-    coinbaseWallet({ appName: "Ecosystem Fund Guardian" }),
-    baseAccount({ projectId: WALLETCONNECT_PROJECT_ID }),
-  ],
+  connectors: defaultConnectors,
   ssr: true,
 });
 
