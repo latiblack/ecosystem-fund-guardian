@@ -36,7 +36,7 @@ function Navbar() {
 
       <div className={`nav-links ${open ? "open" : ""}`}>
         <Link to="/explore" onClick={close}>Explore</Link>
-        <Link to="/create" onClick={close}>Lock Fund</Link>
+        <Link to="/create" onClick={close}>Create Project</Link>
         <Link to="/submit" onClick={close}>Submit Proof</Link>
 
         {shortAddr ? (

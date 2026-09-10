@@ -22,6 +22,9 @@ export default function Landing() {
     <div className="landing">
       {/* Hero */}
       <section className="hero">
+        <div className="hero-image-wrap">
+          <img src="/hero.png" alt="Ecosystem Fund Guardian" className="hero-image" />
+        </div>
         <h1>
           Prove your ecosystem
           <br />
@@ -44,9 +47,6 @@ export default function Landing() {
           <Link to="/explore" className="btn btn-outline btn-lg">
             Explore Funds
           </Link>
-        </div>
-        <div className="hero-image-wrap">
-          <img src="/hero.png" alt="Ecosystem Fund Guardian" className="hero-image" />
         </div>
       </section>
 
