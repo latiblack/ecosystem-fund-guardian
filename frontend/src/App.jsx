@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
 import { metaMask, coinbaseWallet, baseAccount, walletConnect } from "@wagmi/connectors";
@@ -6,7 +6,7 @@ import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "w
 import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
-import { Menu, X, Wallet } from "lucide-react";
+import { Menu, Wallet } from "lucide-react";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -44,32 +44,19 @@ const config = createConfig({
 const queryClient = new QueryClient();
 
 function Navbar() {
-  const [open, setOpen] = useState(false);
-  const location = window.location.pathname;
-  const isLanding = location === "/";
-  const close = () => setOpen(false);
-
   return (
     <>
     <nav className="navbar">
-      <Link to="/" className="logo" onClick={close}>
+      <a href="/" className="logo" >
         <img src="/nav-logo.png" alt="EFG" className="logo-img" />
-      </Link>
+      </a>
 
-      {!isLanding && (
-        <button className="menu-toggle" onClick={() => setOpen(!open)}>
-          {open ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      )}
+      <div className="nav-links">
+        <a href="/explore">Explore</a>
+        <a href="/create">Create Project</a>
+        <a href="/submit">Submit Proof</a>
 
-      <div className={`nav-links ${open ? "open" : ""}`}>
-        <Link to="/explore" onClick={close}>Explore</Link>
-        <Link to="/create" onClick={close}>Create Project</Link>
-        <Link to="/submit" onClick={close}>Submit Proof</Link>
-
-        {!isLanding && (
-          <ConnectButton />
-        )}
+        <ConnectButton />
       </div>
     </nav>
     </>
