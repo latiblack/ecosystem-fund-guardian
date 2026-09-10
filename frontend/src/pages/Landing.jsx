@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useWallet } from "../context/WalletContext";
-import WalletModal from "../components/WalletModal";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   ShieldAlert,
   Eye,
@@ -22,13 +22,12 @@ import {
 
 export default function Landing() {
   const navigate = useNavigate();
-  const { address, connect } = useWallet();
-  const [showWalletModal, setShowWalletModal] = useState(false);
+  const { isAuthenticated } = useWallet();
+  const { openConnectModal } = useConnectModal();
 
-  const handleLockFund = async () => {
-    if (!address) {
-      // Open wallet modal instead of direct connection
-      setShowWalletModal(true);
+  const handleLockFund = () => {
+    if (!isAuthenticated) {
+      openConnectModal();
       return;
     }
     navigate("/create");
@@ -65,9 +64,6 @@ export default function Landing() {
           </Link>
         </div>
       </section>
-
-      {/* Wallet Modal */}
-      <WalletModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} />
 
       {/* Powered by GenLayer */}
       <section className="genlayer-section">
