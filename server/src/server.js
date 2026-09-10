@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { verifyMessage, getContract, createPublicClient, http, parseEther, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { createClient } from "@supabase/supabase-js";
 
 const app = express();
 app.use(cors());
@@ -15,10 +16,14 @@ app.use(express.json({ limit: "1mb" }));
 const PRIVATE_KEY = (process.env.GENLAYER_PRIVATE_KEY || "").trim();
 const GOVERNANCE_ADDRESS = (process.env.GOVERNANCE_CONTRACT || "").trim();
 const SPENDING_ADDRESS = (process.env.SPENDING_CONTRACT || "").trim();
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
+const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE || "";
 
 if (!PRIVATE_KEY) throw new Error("GENLAYER_PRIVATE_KEY required");
 if (!GOVERNANCE_ADDRESS) throw new Error("GOVERNANCE_CONTRACT required");
 if (!SPENDING_ADDRESS) throw new Error("SPENDING_CONTRACT required");
+if (!SUPABASE_URL) throw new Error("SUPABASE_URL required");
+if (!SUPABASE_SERVICE_ROLE) throw new Error("SUPABASE_SERVICE_ROLE required");
 
 // Ensure private key is 64 hex chars (without 0x prefix)
 const cleanKey = PRIVATE_KEY.replace(/^0x/, "");
@@ -30,9 +35,8 @@ if (cleanKey.length !== 64) {
 const account = privateKeyToAccount(`0x${cleanKey}`);
 console.log(`Server wallet: ${account.address}`);
 
-// In-memory storage for projects and campaigns
-const projects = {};
-const campaigns = {};
+// Initialize Supabase client with service role
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE);
 
 // ──────────────────────────────────────────────
 // Chain Configuration for any EVM network
@@ -49,16 +53,12 @@ const CHAIN_CONFIG = {
   11155111: { name: "Sepolia", nativeToken: "ETH", decimals: 18 },
 };
 
-// Bradbury testnet (custom RPC)
-const BRADBURY_CHAIN_ID = 4216; // Example - update with actual Bradbury chain ID
-
 /**
  * Get a viem public client for any EVM chain
  */
 function getChainClient(chainId) {
   const config = CHAIN_CONFIG[chainId];
   if (config) {
-    // Use public RPCs for major chains
     const rpcUrls = {
       1: "https://eth.llamarpc.com",
       5: "https://rpc.goerli.gateway.fm",
@@ -136,7 +136,6 @@ function verifySignature(walletAddress, signature, message) {
 async function approveToken(tokenAddress, spenderAddress, amount, chainId) {
   const client = getChainClient(chainId);
   
-  // ERC-20 approve ABI
   const ERC20_ABI = [
     {
       constant: false,
@@ -198,7 +197,7 @@ async function lockNativeToken(amount, chainId) {
   const txHash = await client.sendTransaction({
     account,
     to: SPENDING_ADDRESS,
-    value: amount, // in wei
+    value: amount,
   });
   
   console.log(`Native token lock tx: ${txHash}`);
@@ -221,6 +220,7 @@ app.get("/health", async (req, res) => {
       governance: GOVERNANCE_ADDRESS,
       spending: SPENDING_ADDRESS,
       supported_chains: Object.keys(CHAIN_CONFIG).map(Number),
+      supabase_connected: !!SUPABASE_URL,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -265,42 +265,68 @@ app.post("/api/project", async (req, res) => {
       return res.status(401).json({ error: "Invalid wallet signature" });
     }
     
-    // Store project locally (in production, would write to contract)
-    projects[project_id] = {
-      project_id,
-      name,
-      logo_url: logo_url || "",
-      description: description || "",
-      chain: chain || CHAIN_CONFIG[chainIdNum]?.name || `Chain ${chainIdNum}`,
-      chainId: chainIdNum,
-      creator: creator,
-      created_at: new Date().toISOString(),
-      status: "active"
-    };
+    // Store project in Supabase
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        id: project_id,
+        name,
+        logo_url: logo_url || null,
+        description: description || null,
+        creator_address: creator,
+        chain_id: chainIdNum,
+      })
+      .select()
+      .single();
     
-    console.log(`Project created: ${project_id} on chain ${chainIdNum}`);
+    if (error) throw error;
+    
+    console.log(`Project created in Supabase: ${project_id} on chain ${chainIdNum}`);
     
     res.json({
       success: true,
       projectId: project_id,
       chainId: chainIdNum,
-      message: `Project created on ${CHAIN_CONFIG[chainIdNum]?.name || 'custom chain'}`
+      data,
+      message: `Project created in database on ${CHAIN_CONFIG[chainIdNum]?.name || 'custom chain'}`
     });
   } catch (err) {
+    console.error("Project creation error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.get("/api/projects", async (req, res) => {
-  res.json(Object.values(projects));
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/api/project/:id", async (req, res) => {
-  const project = projects[req.params.id];
-  if (!project) {
-    return res.status(404).json({ error: "Project not found" });
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    
+    if (error) throw error;
+    
+    if (!data) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  res.json(project);
 });
 
 // ──────────────────────────────────────────────
@@ -340,83 +366,122 @@ app.post("/api/campaign", async (req, res) => {
     }
 
     // Verify project exists and user is creator
-    const project = projects[project_id];
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', project_id)
+      .single();
+    
+    if (projectError) throw projectError;
+    
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
-    if (creator.toLowerCase() !== project.creator.toLowerCase()) {
+    if (creator.toLowerCase() !== project.creator_address.toLowerCase()) {
       return res.status(403).json({ error: "Only project creator can create campaigns" });
     }
 
     // Parse recipients
     const recipientList = typeof recipients === "string" ? JSON.parse(recipients) : recipients;
-    const amounts = typeof req.body.amounts === "string" ? JSON.parse(req.body.amounts) : req.body.amounts;
 
     if (!recipientList || recipientList.length === 0) {
       return res.status(400).json({ error: "Recipients required" });
     }
 
-    // Store campaign
-    const campaign = {
-      id: campaignId,
-      project_id,
-      creator: creator,
-      rules,
-      max_per_recipient: maxPerRecipient || "0",
-      duration_days: durationDays || 90,
-      required_deliverables: requiredDeliverables || "",
-      recipients: recipientList,
-      amounts: amounts || recipientList.map(() => "0"),
-      token_address: tokenAddress || "native",
-      token_symbol: tokenSymbol || "ETH",
-      chain_id: chainId || project.chainId,
-      status: "active",
-      total_locked: 0,
-      created_at: new Date().toISOString(),
-    };
+    // Store campaign in Supabase
+    const { data, error } = await supabase
+      .from('campaigns')
+      .insert({
+        id: campaignId,
+        project_id,
+        category: req.body.category || 'ecosystem',
+        creator_address: creator,
+        signature,
+        rules,
+        max_per_recipient: maxPerRecipient || 0,
+        duration_days: durationDays || 90,
+        recipients: JSON.stringify(recipientList),
+        token_address: tokenAddress || 'native',
+        token_symbol: tokenSymbol || 'ETH',
+        chain_id: chainId || project.chain_id,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
 
-    campaigns[campaignId] = campaign;
+    console.log(`Campaign created in Supabase: ${campaignId}`);
 
     res.json({
       success: true,
       campaignId,
-      message: "Campaign created - ready to lock tokens",
-      next_step: "lock_tokens"
+      message: "Campaign created in database - ready to lock tokens",
+      next_step: "lock_tokens",
+      data
     });
   } catch (err) {
+    console.error("Campaign creation error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
 app.get("/api/campaigns", async (req, res) => {
-  res.json(Object.values(campaigns));
+  try {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('*, projects(name, description, logo_url, creator_address, chain_id)')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get("/api/campaign/:id", async (req, res) => {
-  const campaign = campaigns[req.params.id];
-  res.json(campaign || { error: "Campaign not found" });
+  try {
+    const { data, error } = await supabase
+      .from('campaigns')
+      .select('*, projects(name, description, logo_url, creator_address, chain_id)')
+      .eq('id', req.params.id)
+      .single();
+    
+    if (error) throw error;
+    
+    if (!data) {
+      return res.status(404).json({ error: "Campaign not found" });
+    }
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ──────────────────────────────────────────────
 // Token Locking Endpoints
 // ──────────────────────────────────────────────
 
-/**
- * Lock tokens for a campaign
- * Supports both native tokens and ERC-20 tokens
- */
 app.post("/api/campaign/:id/lock-tokens", async (req, res) => {
   try {
     const campaignId = req.params.id;
     const {
       walletAddress,
       signature,
-      tokenAddress,      // "native" for native token, or ERC-20 address
-      amount,            // Amount to lock
-      chainId,           // EVM chain ID
+      tokenAddress,
+      amount,
+      chainId,
     } = req.body;
 
-    const campaign = campaigns[campaignId];
+    // Get campaign from Supabase
+    const { data: campaign, error: campaignError } = await supabase
+      .from('campaigns')
+      .select('*')
+      .eq('id', campaignId)
+      .single();
+    
+    if (campaignError) throw campaignError;
+    
     if (!campaign) {
       return res.status(404).json({ error: "Campaign not found" });
     }
@@ -429,7 +494,7 @@ app.post("/api/campaign/:id/lock-tokens", async (req, res) => {
     }
 
     // Verify wallet matches campaign creator
-    if (walletAddress.toLowerCase() !== campaign.creator.toLowerCase()) {
+    if (walletAddress.toLowerCase() !== campaign.creator_address.toLowerCase()) {
       return res.status(403).json({ error: "Only campaign creator can lock tokens" });
     }
 
@@ -442,7 +507,7 @@ app.post("/api/campaign/:id/lock-tokens", async (req, res) => {
       txHash = await lockNativeToken(amountInWei, cId);
     } else {
       // Lock ERC-20 token
-      const tokenDecimals = 18; // Common default, could be fetched from contract
+      const tokenDecimals = 18;
       const amountInUnits = parseUnits(amount.toString(), tokenDecimals);
       
       // First approve the spending contract
@@ -452,15 +517,17 @@ app.post("/api/campaign/:id/lock-tokens", async (req, res) => {
       await transferToken(tokenAddress, SPENDING_ADDRESS, amountInUnits, cId);
     }
 
-    // Update campaign locked amount
-    campaign.total_locked = parseFloat(campaign.total_locked) + parseFloat(amount);
-    campaigns[campaignId] = campaign;
+    // Update campaign in Supabase
+    await supabase
+      .from('campaigns')
+      .update({ total_locked: campaign.total_locked + parseFloat(amount) })
+      .eq('id', campaignId);
 
     res.json({
       success: true,
       txHash,
       message: `Successfully locked ${amount} ${tokenAddress === "native" ? "native token" : tokenAddress}`,
-      campaign: campaign
+      campaign
     });
   } catch (err) {
     console.error("Token lock error:", err);
@@ -468,9 +535,6 @@ app.post("/api/campaign/:id/lock-tokens", async (req, res) => {
   }
 });
 
-/**
- * Get token balance for wallet on specific chain
- */
 app.get("/api/balance", async (req, res) => {
   try {
     const { address, tokenAddress, chainId } = req.body;
@@ -482,11 +546,9 @@ app.get("/api/balance", async (req, res) => {
     const cId = parseInt(chainId);
     
     if (tokenAddress === "native" || !tokenAddress) {
-      // Native token balance
       const balance = await getBalance(address, cId);
       return res.json({ balance, token: "native", chainId: cId });
     } else {
-      // ERC-20 token balance
       const client = getChainClient(cId);
       
       const ERC20_ABI = [
@@ -506,9 +568,7 @@ app.get("/api/balance", async (req, res) => {
       });
       
       const balance = await contract.read.balanceOf([address]);
-      const balanceFormatted = Number(balance) / 1e18;
-      
-      return res.json({ balance: balanceFormatted, token: tokenAddress, chainId: cId });
+      return res.json({ balance: Number(balance) / 1e18, token: tokenAddress, chainId: cId });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -516,14 +576,71 @@ app.get("/api/balance", async (req, res) => {
 });
 
 // ──────────────────────────────────────────────
-// Start
+// Evidence Submissions
 // ──────────────────────────────────────────────
+
+app.post("/api/evidence", async (req, res) => {
+  try {
+    const { campaign_id, recipient_address, url, chain_id } = req.body;
+    
+    if (!campaign_id || !url) {
+      return res.status(400).json({ error: "campaign_id and url required" });
+    }
+
+    // Verify campaign exists
+    const { data: campaign } = await supabase
+      .from('campaigns')
+      .select('*')
+      .eq('id', campaign_id)
+      .single();
+    
+    if (!campaign) {
+      return res.status(404).json({ error: "Campaign not found" });
+    }
+
+    // Store evidence submission
+    const { data, error } = await supabase
+      .from('evidence_submissions')
+      .insert({
+        campaign_id,
+        recipient_address,
+        url,
+        status: 'pending',
+        verdict: null,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      evidenceId: data.id,
+      message: "Evidence submitted for review"
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/evidence/:campaignId", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('evidence_submissions')
+      .select('*')
+      .eq('campaign_id', req.params.campaignId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
-  console.log(`Ecosystem Fund Guardian API running on port ${PORT}`);
-  console.log(`Signer: ${account.address}`);
-  console.log(`Governance: ${GOVERNANCE_ADDRESS}`);
-  console.log(`Spending: ${SPENDING_ADDRESS}`);
-  console.log(`Supporting all EVM-compatible chains`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Supabase connected: ${SUPABASE_URL}`);
+  console.log(`✅ Contracts: Governance=${GOVERNANCE_ADDRESS}, Spending=${SPENDING_ADDRESS}`);
 });
