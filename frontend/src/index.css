@@ -1021,7 +1021,7 @@ a:hover { text-decoration: underline; }
   .nav-links {
     display: none;
     position: absolute;
-    top: 56px;
+    top: 48px;
     left: 0;
     right: 0;
     background: var(--bg);
@@ -1029,9 +1029,18 @@ a:hover { text-decoration: underline; }
     flex-direction: column;
     padding: 16px 24px;
     gap: 16px;
+    z-index: 100;
   }
 
   .nav-links.open { display: flex; }
+
+  /* Mobile: ConnectButton full width */
+  .nav-links [data-testid="connect-button"],
+  .nav-links button[data-testid="connect-button"] {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+  }
 
   .hero h1 { font-size: 40px; letter-spacing: -2px; }
   .hero-desc { font-size: 14px; }
@@ -1227,15 +1236,7 @@ a:hover { text-decoration: underline; }
   50% { box-shadow: 0 0 40px rgba(212, 255, 0, 1); }
 }
 
-/* ──────────────────────────────────────────────
-   EXPLORE STATS BAR
-   ────────────────────────────────────────────── */
-.explore-stats {
-  display: flex;
-  gap: 1px;
-  background: var(--border);
-  margin-bottom: 24px;
-}
+/* ──────────────────────────────────────────────\n   EXPLORE STATS BAR\n   ────────────────────────────────────────────── */\n.explore-stats {\n  display: flex;\n  gap: 1px;\n  background: var(--border);\n  margin-bottom: 24px;\n}\n\n/* Mobile responsive ConnectButton */\n@media (max-width: 768px) {\n  .nav-links {\n    padding-bottom: 16px;\n  }\n\n  /* Stack ConnectButton below links on mobile */\n  .nav-links [data-testid=\"connect-button\"] {\n    width: 100%;\n    justify-content: center;\n    margin-top: 12px;\n  }\n}\n
 
 .explore-stat {
   flex: 1;

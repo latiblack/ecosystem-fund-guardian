@@ -1,12 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
-import { metaMask, coinbaseWallet, baseAccount, walletConnect } from "@wagmi/connectors";
-import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
-import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-me/rainbowkit";
-import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
-import { Menu, Wallet } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -44,6 +37,7 @@ const config = createConfig({
 const queryClient = new QueryClient();
 
 function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
   const location = window.location.pathname;
   const isLanding = location === "/";
 
@@ -54,10 +48,14 @@ function Navbar() {
         <img src="/nav-logo.png" alt="EFG" className="logo-img" />
       </a>
 
-      <div className="nav-links">
-        <a href="/explore">Explore</a>
-        <a href="/create">Create Project</a>
-        <a href="/submit">Submit Proof</a>
+      <button className="menu-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      <div className={`nav-links ${isOpen ? 'open' : ''}`}>
+        <a href="/explore" onClick={() => setIsOpen(false)}>Explore</a>
+        <a href="/create" onClick={() => setIsOpen(false)}>Create Project</a>
+        <a href="/submit" onClick={() => setIsOpen(false)}>Submit Proof</a>
 
         {!isLanding && <ConnectButton />}
       </div>
