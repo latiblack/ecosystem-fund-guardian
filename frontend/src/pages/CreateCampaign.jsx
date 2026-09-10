@@ -103,13 +103,38 @@ export default function CreateCampaign() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const handleProjectSave = async (e) => {
+    e.preventDefault();
+    if (!project.name) { showToast("Project name is required", "error"); return; }
+    setLoading(true);
+    try {
+      await fetch(`${API}/api/campaign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaignId: `${project.name.toLowerCase().replace(/\s+/g, "-")}-project`,
+          rules: "",
+          project: project.name,
+          description: project.description,
+          chain: project.chain,
+          logo: project.logo,
+        }),
+      });
+      setStep(2);
+    } catch (err) {
+      showToast(err.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const selectCategory = (cat) => {
     setCategory(cat);
     setFund((f) => ({ ...f, rules: RULE_TEMPLATES[cat.id] || "" }));
     setStep(3);
   };
 
-  const handleSubmit = async (e) => {
+  const handleLockSubmit = async (e) => {
     e.preventDefault();
     if (!fund.token || !fund.amount || !fund.rules) {
       showToast("Token, amount, and spending rules are required", "error");
@@ -117,7 +142,7 @@ export default function CreateCampaign() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/campaign`, {
+      await fetch(`${API}/api/campaign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,8 +155,6 @@ export default function CreateCampaign() {
           category: category.id,
         }),
       });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
       setStep(4);
     } catch (err) {
       showToast(err.message, "error");
@@ -140,7 +163,7 @@ export default function CreateCampaign() {
     }
   };
 
-  const stepLabels = ["Project", "Category", "Lock Fund"];
+  const stepLabels = ["Project", "Confirm", "Lock Fund"];
 
   return (
     <div>
@@ -162,100 +185,107 @@ export default function CreateCampaign() {
 
       {/* Step 1: Project Details */}
       {step === 1 && (
-        <div className="card">
-          <h2>Create Your Project</h2>
-          <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-            Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
-          </p>
+        <form onSubmit={handleProjectSave}>
+          <div className="card">
+            <h2>Create Your Project</h2>
+            <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
+              Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
+            </p>
 
-          <div className="form-group">
-            <label>Project Name</label>
-            <input
-              placeholder="e.g. Hyperliquid"
-              value={project.name}
-              onChange={(e) => setProject((p) => ({ ...p, name: e.target.value }))}
-            />
+            <div className="form-group">
+              <label>Project Name *</label>
+              <input
+                placeholder="e.g. Hyperliquid"
+                value={project.name}
+                onChange={(e) => setProject((p) => ({ ...p, name: e.target.value }))}
+                autoFocus
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Logo URL</label>
+              <input
+                placeholder="https://yourproject.com/logo.png"
+                value={project.logo}
+                onChange={(e) => setProject((p) => ({ ...p, logo: e.target.value }))}
+              />
+              <p className="form-hint">Direct link to your project logo image</p>
+            </div>
+
+            <div className="form-group">
+              <label>Description</label>
+              <textarea
+                placeholder="What does your project do? Why does it exist?"
+                value={project.description}
+                onChange={(e) => setProject((p) => ({ ...p, description: e.target.value }))}
+                rows={4}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Network</label>
+              <input
+                value={project.chain}
+                onChange={(e) => setProject((p) => ({ ...p, chain: e.target.value }))}
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Logo URL</label>
-            <input
-              placeholder="https://yourproject.com/logo.png"
-              value={project.logo}
-              onChange={(e) => setProject((p) => ({ ...p, logo: e.target.value }))}
-            />
-            <p className="form-hint">Direct link to your project logo image</p>
-          </div>
-
-          <div className="form-group">
-            <label>Description</label>
-            <textarea
-              placeholder="What does your project do? Why does it exist?"
-              value={project.description}
-              onChange={(e) => setProject((p) => ({ ...p, description: e.target.value }))}
-              rows={4}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Network</label>
-            <input
-              value={project.chain}
-              onChange={(e) => setProject((p) => ({ ...p, chain: e.target.value }))}
-            />
-          </div>
-
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              if (!project.name) { showToast("Project name is required", "error"); return; }
-              setStep(2);
-            }}
-          >
+          <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }}>
             Next — Choose Category <ArrowRight size={16} />
           </button>
-        </div>
+        </form>
       )}
 
-      {/* Step 2: Category Selection */}
+      {/* Step 2: Congratulatory */}
       {step === 2 && (
-        <div>
-          <h2 style={{ marginBottom: 8 }}>What is this fund for?</h2>
-          <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-            Choose a category. We&apos;ll pre-fill the spending rules based on your choice.
+        <div className="card" style={{ textAlign: "center", padding: "48px 24px" }}>
+          <CheckCircle2 size={56} style={{ color: "var(--accent)", marginBottom: 16 }} />
+          <h2 style={{ marginBottom: 8 }}>Project Created!</h2>
+          <p style={{ color: "var(--accent)", fontWeight: 700, fontSize: 20, marginBottom: 12 }}>{project.name}</p>
+          <p style={{ color: "var(--text-dim)", marginBottom: 8, fontSize: 14 }}>
+            {project.description || "Your project is ready."}
           </p>
-
-          <div className="category-grid">
-            {CATEGORIES.map((cat) => {
-              const Icon = cat.icon;
-              return (
-                <button
-                  key={cat.id}
-                  className={`category-card${category?.id === cat.id ? " selected" : ""}`}
-                  onClick={() => selectCategory(cat)}
-                >
-                  <Icon size={24} className="icon-accent" />
-                  <h3>{cat.name}</h3>
-                  <p>{cat.desc}</p>
-                </button>
-              );
-            })}
-          </div>
-
-          <button className="btn btn-outline" style={{ marginTop: 16 }} onClick={() => setStep(1)}>
-            <ArrowLeft size={16} /> Back
+          <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
+            Now lock your ecosystem fund and define the spending rules your community will see.
+          </p>
+          <button className="btn btn-primary btn-lg" onClick={() => setStep(3)}>
+            Lock Funds <ArrowRight size={18} />
           </button>
         </div>
       )}
 
       {/* Step 3: Lock Fund */}
       {step === 3 && (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleLockSubmit}>
           <div className="card">
-            <h2>Lock Fund — {category?.name}</h2>
+            <h2>Lock Your Fund</h2>
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-              Define the fund parameters. Rules are pre-filled based on your category — edit as needed.
+              Choose a category, then fill in the fund details below.
             </p>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: "block", fontFamily: "var(--font-heading)", fontSize: 11, fontWeight: 600, marginBottom: 10, color: "var(--text-dim)", letterSpacing: 1 }}>
+                CHOOSE CATEGORY
+              </label>
+              <div className="category-grid">
+                {CATEGORIES.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      className={`category-card${category?.id === cat.id ? " selected" : ""}`}
+                      onClick={() => selectCategory(cat)}
+                    >
+                      <Icon size={24} className="icon-accent" />
+                      <h3>{cat.name}</h3>
+                      <p>{cat.desc}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="form-row">
               <div className="form-group">
@@ -312,25 +342,21 @@ export default function CreateCampaign() {
               <ArrowLeft size={16} /> Back
             </button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? (
-                <><Loader2 size={16} className="spin" /> Locking...</>
-              ) : (
-                <><Lock size={16} /> Lock Fund</>
-              )}
+              {loading ? <><Loader2 size={16} className="spin" /> Locking...</> : <><Lock size={16} /> Lock Fund</>}
             </button>
           </div>
         </form>
       )}
 
-      {/* Step 4: Success */}
+      {/* Step 4: Final Success */}
       {step === 4 && (
         <div className="card" style={{ textAlign: "center", padding: "48px 24px" }}>
-          <CheckCircle2 size={48} style={{ color: "var(--accent)", marginBottom: 16 }} />
+          <CheckCircle2 size={56} style={{ color: "var(--accent)", marginBottom: 16 }} />
           <h2 style={{ marginBottom: 8 }}>Fund Locked Successfully</h2>
-          <p style={{ color: "var(--accent)", fontWeight: 600, marginBottom: 4 }}>{project.name}</p>
+          <p style={{ color: "var(--accent)", fontWeight: 700, fontSize: 20, marginBottom: 4 }}>{project.name}</p>
           <p style={{ color: "var(--text-dim)", marginBottom: 8 }}>{category?.name}</p>
           <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
-            {fund.amount} {fund.token} locked for {fund.duration} days. Your community can now see the fund and its rules.
+            {fund.amount} {fund.token} locked for {fund.duration} days. Your community can now see every rule, payment, and verdict.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
             <Link to="/explore" className="btn btn-primary">View Projects</Link>
