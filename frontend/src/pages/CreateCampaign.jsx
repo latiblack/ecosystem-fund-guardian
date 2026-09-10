@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useWallet } from "../context/WalletContext";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
-  Megaphone, Landmark, Code, Users, Calendar, Gift,
+  Megaphone, Landmark, Code, Users, Calendar, Gift, AlertCircle,
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
@@ -97,6 +98,7 @@ export default function CreateCampaign() {
   const [fund, setFund] = useState({ token: "", amount: "", duration: 90, rules: "", recipients: "" });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
+  const { address, connect } = useWallet();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -106,9 +108,10 @@ export default function CreateCampaign() {
   const handleProjectSave = async (e) => {
     e.preventDefault();
     if (!project.name) { showToast("Project name is required", "error"); return; }
+    if (!address) { connect(); showToast("Please connect your wallet first", "info"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/project`, {
+      const res = await fetch(`${API}/api/project`, {\
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -117,6 +120,7 @@ export default function CreateCampaign() {
           description: project.description,
           chain: project.chain,
           logo_url: project.logo,
+          creator: address,
         }),
       });
       const json = await res.json();
@@ -150,6 +154,7 @@ export default function CreateCampaign() {
         body: JSON.stringify({
           campaignId: `${projectId}-${category.id}`,
           project_id: projectId,
+          creator: address,
           rules: fund.rules,
           maxPerRecipient: "0",
           durationDays: Number(fund.duration) || 90,

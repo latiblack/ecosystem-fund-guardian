@@ -89,13 +89,15 @@ app.get("/health", async (req, res) => {
 
 app.post("/api/project", async (req, res) => {
   try {
-    const { project_id, name, logo_url, description, chain } = req.body;
+    const { project_id, name, logo_url, description, chain, creator } = req.body;
     if (!project_id || !name) {
       return res.status(400).json({ error: "project_id and name required" });
     }
     const { hash } = await writeContract(GOVERNANCE_ADDRESS, "create_project", [
       project_id, name, logo_url || "", description || "", chain || "GenLayer"
     ]);
+    // Store project in memory with creator
+    projects[project_id] = { project_id, name, logo_url: logo_url || "", description: description || "", chain: chain || "GenLayer", creator: creator || "", created_at: new Date().toISOString() };
     res.json({ success: true, txHash: hash, projectId: project_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -130,10 +132,20 @@ app.post("/api/campaign", async (req, res) => {
     const {
       campaignId, project_id, rules, maxPerRecipient,
       durationDays, requiredDeliverables, recipients,
+      creator,
     } = req.body;
 
     if (!campaignId || !rules || !project_id) {
       return res.status(400).json({ error: "campaignId, project_id, and rules required" });
+    }
+
+    // Verify user is the project creator
+    const project = projects[project_id];
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    if (project.creator && creator && project.creator.toLowerCase() !== creator.toLowerCase()) {
+      return res.status(403).json({ error: "Only the project creator can create a campaign" });
     }
 
     const { hash } = await writeContract(GOVERNANCE_ADDRESS, "create_campaign", [
@@ -145,6 +157,20 @@ app.post("/api/campaign", async (req, res) => {
       requiredDeliverables || "",
       recipients || "",
     ]);
+
+    // Store campaign in memory with creator
+    campaigns[campaignId] = {
+      id: campaignId,
+      project_id,
+      creator: creator || project.creator || "",
+      rules,
+      max_per_recipient: maxPerRecipient || "0",
+      duration_days: durationDays || 90,
+      required_deliverables: requiredDeliverables || "",
+      recipients: recipients || "",
+      status: "active",
+      created_at: new Date().toISOString(),
+    };
 
     res.json({ success: true, txHash: hash, campaignId });
   } catch (err) {
