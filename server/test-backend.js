@@ -23,7 +23,9 @@ async function writeContract(address, methodName, args) {
   
   if (methodName === 'create_project') {
     const [, name, logo_url, description, chain] = args;
-    const project = { id: campaignId, name, logo_url, description, chain, created_at: new Date().toISOString() };
+    // Extract creator from args[5] or use default
+    const creator = args[5] || '';
+    const project = { id: campaignId, name, logo_url, description, chain, created_at: new Date().toISOString(), creator };
     mockProjects.push(project);
     return { hash: '0xmock123' };
   }
@@ -99,7 +101,7 @@ app.post('/api/project', async (req, res) => {
     // Mock signature verification - in production this would use viem verifyMessage
     const isValidSignature = signature.length > 10 && creator.startsWith('0x');
     if (!isValidSignature) return res.status(401).json({ error: 'Invalid wallet signature' });
-    const { hash } = await writeContract('governance', 'create_project', [project_id, name, logo_url || '', description || '', chain || 'GenLayer']);
+    const { hash } = await writeContract('governance', 'create_project', [project_id, name, logo_url || '', description || '', chain || 'GenLayer', creator]);
     res.json({ success: true, txHash: hash, projectId: project_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -254,18 +256,26 @@ describe('Ecosystem Fund Guardian API', () => {
     });
 
     it('should reject non-creator trying to create campaign', async () => {
+      // Create a project with one creator
+      await fetch('http://localhost:9999/api/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: 'test-proj-2', name: 'Test Project 2', creator: '0xCREATOR1234567890abcdef1234567890abcde', signature: '0xsignature' })
+      });
+      
       const res = await fetch('http://localhost:9999/api/campaign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          campaignId: 'camp-other',
-          project_id: 'test-project',
+          campaignId: 'camp-noncreator',
+          project_id: 'test-proj-2',
           rules: 'Test',
           creator: '0xOTHER1234567890abcdef1234567890abcde',
           signature: '0xsignature'
         })
       });
       assert.equal(res.status, 403);
+      assert.ok((await res.json()).error.includes('Only the project creator'));
     });
   });
 
