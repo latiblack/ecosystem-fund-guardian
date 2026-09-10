@@ -120,10 +120,30 @@ export default function CreateCampaign() {
     return signature;
   };
 
+  const waitForConnection = async () => {
+    if (address) return true;
+    await connect();
+    // Wait up to 10 seconds for the user to complete connection
+    return new Promise((resolve) => {
+      let checks = 0;
+      const interval = setInterval(() => {
+        checks++;
+        if (address) {
+          clearInterval(interval);
+          resolve(true);
+        } else if (checks > 20) {
+          clearInterval(interval);
+          resolve(false);
+        }
+      }, 500);
+    });
+  };
+
   const handleProjectSave = async (e) => {
     e.preventDefault();
     if (!project.name) { showToast("Project name is required", "error"); return; }
-    if (!address) { connect(); showToast("Please connect your wallet first", "info"); return; }
+    const connected = await waitForConnection();
+    if (!connected) { showToast("Please connect your wallet to continue", "error"); return; }
     setLoading(true);
     try {
       const projectId = project.name.toLowerCase().replace(/\s+/g, "-");
@@ -160,7 +180,8 @@ export default function CreateCampaign() {
 
   const handleLockSubmit = async (e) => {
     e.preventDefault();
-    if (!address) { connect(); showToast("Please connect your wallet first", "info"); return; }
+    const connected = await waitForConnection();
+    if (!connected) { showToast("Please connect your wallet to lock funds", "error"); return; }
     if (!fund.token || !fund.amount || !fund.rules) {
       showToast("Token, amount, and spending rules are required", "error");
       return;
