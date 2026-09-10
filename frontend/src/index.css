@@ -1219,16 +1219,26 @@ a:hover { text-decoration: underline; }
   box-shadow: 0 0 30px rgba(212, 255, 0, 0.8) !important;
 }
 
-/* Force visible connect button */
-[data-testid="connect-button"] {
+/* Force visible connect button on ALL screen sizes */
+[data-testid="connect-button"],
+.rainbow-connect-button,
+[class*="ConnectButton"] {
   background: var(--accent) !important;
   color: #000 !important;
   font-weight: 700 !important;
   border-radius: 8px !important;
-  padding: 10px 20px !important;
+  padding: 8px 16px !important;
   border: 2px solid var(--accent) !important;
   box-shadow: 0 0 20px rgba(212, 255, 0, 0.5) !important;
   animation: pulse 2s infinite !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 120px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  z-index: 1000 !important;
 }
 
 @keyframes pulse {
