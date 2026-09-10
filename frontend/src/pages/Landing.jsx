@@ -45,6 +45,9 @@ export default function Landing() {
             Explore Funds
           </Link>
         </div>
+        <div className="hero-image-wrap">
+          <img src="/hero.png" alt="Ecosystem Fund Guardian" className="hero-image" />
+        </div>
       </section>
 
       {/* Powered by GenLayer */}
@@ -215,9 +218,6 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="cta-section">
-        <div className="genlayer-logo-wrap" style={{ marginBottom: 16 }}>
-          <img src="/genlayer-logo.jpeg" alt="GenLayer" className="genlayer-logo" />
-        </div>
         <h2>Start proving.<br />Stop hoping.</h2>
         <p>Lock your ecosystem fund. Define the rules. Let GenLayer verify every payment for your community.</p>
         <div className="hero-actions">
