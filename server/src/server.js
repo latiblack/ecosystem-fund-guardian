@@ -12,16 +12,22 @@ app.use(express.json({ limit: "1mb" }));
 // Multi-chain EVM Configuration
 // ──────────────────────────────────────────────
 
-const PRIVATE_KEY = process.env.GENLAYER_PRIVATE_KEY;
-const GOVERNANCE_ADDRESS = process.env.GOVERNANCE_CONTRACT;
-const SPENDING_ADDRESS = process.env.SPENDING_CONTRACT;
+const PRIVATE_KEY = (process.env.GENLAYER_PRIVATE_KEY || "").trim();
+const GOVERNANCE_ADDRESS = (process.env.GOVERNANCE_CONTRACT || "").trim();
+const SPENDING_ADDRESS = (process.env.SPENDING_CONTRACT || "").trim();
 
 if (!PRIVATE_KEY) throw new Error("GENLAYER_PRIVATE_KEY required");
 if (!GOVERNANCE_ADDRESS) throw new Error("GOVERNANCE_CONTRACT required");
 if (!SPENDING_ADDRESS) throw new Error("SPENDING_CONTRACT required");
 
+// Ensure private key is 64 hex chars (without 0x prefix)
+const cleanKey = PRIVATE_KEY.replace(/^0x/, "");
+if (cleanKey.length !== 64) {
+  throw new Error(`Invalid private key length: ${cleanKey.length}, expected 64`);
+}
+
 // Server's private account
-const account = privateKeyToAccount(`0x${PRIVATE_KEY}`);
+const account = privateKeyToAccount(`0x${cleanKey}`);
 console.log(`Server wallet: ${account.address}`);
 
 // In-memory storage for projects and campaigns
