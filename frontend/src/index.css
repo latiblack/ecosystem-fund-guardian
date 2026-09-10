@@ -59,6 +59,9 @@ a:hover { text-decoration: underline; }
 .logo-img {
   height: 28px;
   width: auto;
+  border: 1.5px solid var(--accent);
+  border-radius: 6px;
+  padding: 3px;
 }
 
 .logo {
