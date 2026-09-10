@@ -93,8 +93,12 @@ async function readContract(address, methodName, args = []) {
 // Inject mock functions into server context
 app.post('/api/project', async (req, res) => {
   try {
-    const { project_id, name, logo_url, description, chain } = req.body;
+    const { project_id, name, logo_url, description, chain, creator, signature } = req.body;
     if (!project_id || !name) return res.status(400).json({ error: 'project_id and name required' });
+    if (!creator || !signature) return res.status(400).json({ error: 'Wallet connection required: provide creator address and signature' });
+    // Mock signature verification - in production this would use viem verifyMessage
+    const isValidSignature = signature.length > 10 && creator.startsWith('0x');
+    if (!isValidSignature) return res.status(401).json({ error: 'Invalid wallet signature' });
     const { hash } = await writeContract('governance', 'create_project', [project_id, name, logo_url || '', description || '', chain || 'GenLayer']);
     res.json({ success: true, txHash: hash, projectId: project_id });
   } catch (err) {
@@ -113,9 +117,19 @@ app.get('/api/projects', async (req, res) => {
 
 app.post('/api/campaign', async (req, res) => {
   try {
-    const { campaignId, project_id, rules, maxPerRecipient, durationDays, requiredDeliverables, recipients } = req.body;
+    const { campaignId, project_id, rules, maxPerRecipient, durationDays, requiredDeliverables, recipients, creator, signature } = req.body;
     if (!campaignId || !rules || !project_id) {
       return res.status(400).json({ error: 'campaignId, project_id, and rules required' });
+    }
+    if (!creator || !signature) return res.status(400).json({ error: 'Wallet connection required: provide creator address and signature' });
+    // Mock signature verification
+    const isValidSignature = signature.length > 10 && creator.startsWith('0x');
+    if (!isValidSignature) return res.status(401).json({ error: 'Invalid wallet signature' });
+    // Check project exists and creator matches
+    const project = mockProjects.find(p => p.id === project_id);
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    if (project.creator && creator.toLowerCase() !== project.creator.toLowerCase()) {
+      return res.status(403).json({ error: 'Only the project creator can create a campaign' });
     }
     const { hash } = await writeContract('governance', 'create_campaign', [
       campaignId, project_id, rules, maxPerRecipient || '0', durationDays || 90, requiredDeliverables || '', recipients || ''
@@ -158,7 +172,7 @@ describe('Ecosystem Fund Guardian API', () => {
       const res = await fetch('http://localhost:9999/api/project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: 'test-project', name: 'Test Project', description: 'A test' })
+        body: JSON.stringify({ project_id: 'test-project', name: 'Test Project', description: 'A test', creator: '0x1234567890abcdef1234567890abcdef12345678', signature: '0xsignature' })
       });
       const json = await res.json();
       assert.equal(res.status, 200);
@@ -174,6 +188,24 @@ describe('Ecosystem Fund Guardian API', () => {
       });
       assert.equal(res.status, 400);
     });
+
+    it('should reject missing wallet connection', async () => {
+      const res = await fetch('http://localhost:9999/api/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: 'x', name: 'Test' })
+      });
+      assert.equal(res.status, 400);
+    });
+
+    it('should reject invalid signature', async () => {
+      const res = await fetch('http://localhost:9999/api/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: 'x', name: 'Test', creator: 'invalid', signature: 'bad' })
+      });
+      assert.equal(res.status, 401);
+    });
   });
 
   describe('GET /api/projects', () => {
@@ -188,6 +220,13 @@ describe('Ecosystem Fund Guardian API', () => {
 
   describe('POST /api/campaign', () => {
     it('should create a campaign with project_id', async () => {
+      // First create a project
+      await fetch('http://localhost:9999/api/project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: 'test-project', name: 'Test Project', creator: '0x1234567890abcdef1234567890abcdef12345678', signature: '0xsignature' })
+      });
+      
       const res = await fetch('http://localhost:9999/api/campaign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -195,7 +234,9 @@ describe('Ecosystem Fund Guardian API', () => {
           campaignId: 'test-project-marketing',
           project_id: 'test-project',
           rules: 'Marketing only',
-          durationDays: 90
+          durationDays: 90,
+          creator: '0x1234567890abcdef1234567890abcdef12345678',
+          signature: '0xsignature'
         })
       });
       const json = await res.json();
@@ -211,6 +252,21 @@ describe('Ecosystem Fund Guardian API', () => {
       });
       assert.equal(res.status, 400);
     });
+
+    it('should reject non-creator trying to create campaign', async () => {
+      const res = await fetch('http://localhost:9999/api/campaign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          campaignId: 'camp-other',
+          project_id: 'test-project',
+          rules: 'Test',
+          creator: '0xOTHER1234567890abcdef1234567890abcde',
+          signature: '0xsignature'
+        })
+      });
+      assert.equal(res.status, 403);
+    });
   });
 
   describe('Full flow: Create Project → Lock Fund → Submit Evidence → Verify', () => {
@@ -218,7 +274,7 @@ describe('Ecosystem Fund Guardian API', () => {
       const res = await fetch('http://localhost:9999/api/project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: 'hyperliquid', name: 'Hyperliquid', chain: 'EVM' })
+        body: JSON.stringify({ project_id: 'hyperliquid', name: 'Hyperliquid', chain: 'EVM', creator: '0x1234567890abcdef1234567890abcdef12345678', signature: '0xsignature' })
       });
       const json = await res.json();
       assert.ok(json.success);
@@ -232,7 +288,9 @@ describe('Ecosystem Fund Guardian API', () => {
           campaignId: 'hyperliquid-marketing',
           project_id: 'hyperliquid',
           rules: 'Marketing campaigns only',
-          durationDays: 90
+          durationDays: 90,
+          creator: '0x1234567890abcdef1234567890abcdef12345678',
+          signature: '0xsignature'
         })
       });
       const json = await res.json();

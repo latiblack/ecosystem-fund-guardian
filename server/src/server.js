@@ -4,6 +4,7 @@ import cors from "cors";
 import { createClient, createAccount } from "genlayer-js";
 import { testnetBradbury } from "genlayer-js/chains";
 import { TransactionStatus } from "genlayer-js/types";
+import { verifyMessage, toBytes, getBytes } from "viem";
 
 const app = express();
 app.use(cors());
@@ -61,6 +62,30 @@ async function writeContract(address, functionName, args) {
 }
 
 // ──────────────────────────────────────────────
+// Signature verification
+// ──────────────────────────────────────────────
+
+/**
+ * Verify an EIP-191 signed message matches the claimed address.
+ * The message is a JSON string of the request body so both client and server sign the same data.
+ */
+function verifySignature(address, signature, message) {
+  try {
+    // Ensure address is checksummed for verification
+    const normalizedAddress = address.startsWith("0x") ? address : `0x${address}`;
+    const verified = verifyMessage({
+      address: normalizedAddress,
+      message,
+      signature,
+    });
+    return verified.toLowerCase() === normalizedAddress.toLowerCase();
+  } catch (err) {
+    console.error("Signature verification error:", err.message);
+    return false;
+  }
+}
+
+// ──────────────────────────────────────────────
 // Health
 // ──────────────────────────────────────────────
 
@@ -89,15 +114,23 @@ app.get("/health", async (req, res) => {
 
 app.post("/api/project", async (req, res) => {
   try {
-    const { project_id, name, logo_url, description, chain, creator } = req.body;
+    const { project_id, name, logo_url, description, chain, creator, signature } = req.body;
     if (!project_id || !name) {
       return res.status(400).json({ error: "project_id and name required" });
+    }
+    if (!creator || !signature) {
+      return res.status(400).json({ error: "Wallet connection required: provide creator address and signature" });
+    }
+    // Verify signature
+    const message = JSON.stringify({ project_id, name });
+    const isValid = verifySignature(creator, signature, message);
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid wallet signature" });
     }
     const { hash } = await writeContract(GOVERNANCE_ADDRESS, "create_project", [
       project_id, name, logo_url || "", description || "", chain || "GenLayer"
     ]);
-    // Store project in memory with creator
-    projects[project_id] = { project_id, name, logo_url: logo_url || "", description: description || "", chain: chain || "GenLayer", creator: creator || "", created_at: new Date().toISOString() };
+    projects[project_id] = { project_id, name, logo_url: logo_url || "", description: description || "", chain: chain || "GenLayer", creator: creator, created_at: new Date().toISOString() };
     res.json({ success: true, txHash: hash, projectId: project_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -133,10 +166,21 @@ app.post("/api/campaign", async (req, res) => {
       campaignId, project_id, rules, maxPerRecipient,
       durationDays, requiredDeliverables, recipients,
       creator,
+      signature,
     } = req.body;
 
     if (!campaignId || !rules || !project_id) {
       return res.status(400).json({ error: "campaignId, project_id, and rules required" });
+    }
+    if (!creator || !signature) {
+      return res.status(400).json({ error: "Wallet connection required: provide creator address and signature" });
+    }
+
+    // Verify signature
+    const message = JSON.stringify({ campaignId, project_id });
+    const isValid = verifySignature(creator, signature, message);
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid wallet signature" });
     }
 
     // Verify user is the project creator
@@ -144,7 +188,7 @@ app.post("/api/campaign", async (req, res) => {
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
-    if (project.creator && creator && project.creator.toLowerCase() !== creator.toLowerCase()) {
+    if (creator.toLowerCase() !== project.creator.toLowerCase()) {
       return res.status(403).json({ error: "Only the project creator can create a campaign" });
     }
 
@@ -158,11 +202,10 @@ app.post("/api/campaign", async (req, res) => {
       recipients || "",
     ]);
 
-    // Store campaign in memory with creator
     campaigns[campaignId] = {
       id: campaignId,
       project_id,
-      creator: creator || project.creator || "",
+      creator: creator,
       rules,
       max_per_recipient: maxPerRecipient || "0",
       duration_days: durationDays || 90,

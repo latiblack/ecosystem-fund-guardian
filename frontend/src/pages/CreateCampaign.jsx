@@ -105,22 +105,41 @@ export default function CreateCampaign() {
     setTimeout(() => setToast(null), 4000);
   };
 
+  const signWithWallet = async (message) => {
+    if (!window.ethereum || !address) {
+      throw new Error("No wallet connected. Please connect your wallet first.");
+    }
+    const chainId = await window.ethereum.request({ method: "eth_chainId" });
+    if (chainId !== "0x1091") { // Bradbury testnet or fallback
+      throw new Error("Please switch your wallet to the correct network.");
+    }
+    const signature = await window.ethereum.request({
+      method: "personal_sign",
+      params: [message, address],
+    });
+    return signature;
+  };
+
   const handleProjectSave = async (e) => {
     e.preventDefault();
     if (!project.name) { showToast("Project name is required", "error"); return; }
     if (!address) { connect(); showToast("Please connect your wallet first", "info"); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/project`, {\
+      const projectId = project.name.toLowerCase().replace(/\s+/g, "-");
+      const message = JSON.stringify({ project_id: projectId, name: project.name });
+      const signature = await signWithWallet(message);
+      const res = await fetch(`${API}/api/project`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          project_id: project.name.toLowerCase().replace(/\s+/g, "-"),
+          project_id: projectId,
           name: project.name,
           description: project.description,
           chain: project.chain,
           logo_url: project.logo,
           creator: address,
+          signature,
         }),
       });
       const json = await res.json();
@@ -148,13 +167,17 @@ export default function CreateCampaign() {
     setLoading(true);
     try {
       const projectId = project.name.toLowerCase().replace(/\s+/g, "-");
+      const campaignId = `${projectId}-${category.id}`;
+      const message = JSON.stringify({ campaignId, project_id: projectId });
+      const signature = await signWithWallet(message);
       const res = await fetch(`${API}/api/campaign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          campaignId: `${projectId}-${category.id}`,
+          campaignId,
           project_id: projectId,
           creator: address,
+          signature,
           rules: fund.rules,
           maxPerRecipient: "0",
           durationDays: Number(fund.duration) || 90,
@@ -195,6 +218,12 @@ export default function CreateCampaign() {
       {step === 1 && (
         <form onSubmit={handleProjectSave}>
           <div className="card">
+            {!address && (
+              <div style={{ marginBottom: 24, padding: 16, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                <AlertCircle size={20} />
+                <span style={{ fontSize: 14, fontWeight: 500 }}>Conecta tu wallet para crear proyectos. Haz clic en el botón superior derecho.</span>
+              </div>
+            )}
             <h2>Create Your Project</h2>
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
               Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
@@ -267,6 +296,12 @@ export default function CreateCampaign() {
       {step === 3 && (
         <form onSubmit={handleLockSubmit}>
           <div className="card">
+            {!address && (
+              <div style={{ marginBottom: 24, padding: 16, background: "var(--accent)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                <AlertCircle size={20} />
+                <span style={{ fontSize: 14, fontWeight: 500 }}>Conecta tu wallet para crear campañas.</span>
+              </div>
+            )}
             <h2>Lock Your Fund</h2>
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
               Choose a category, then fill in the fund details below.
