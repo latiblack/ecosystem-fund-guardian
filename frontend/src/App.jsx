@@ -55,9 +55,9 @@ function Navbar() {
         <img src="/nav-logo.png" alt="EFG" className="logo-img" />
       </a>
 
-      <button className="menu-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
+      {!isLanding && <button className="menu-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
         {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      </button>}
 
       <div className={`nav-links ${isOpen ? 'open' : ''}`}>
         <a href="/explore" onClick={() => setIsOpen(false)}>Explore</a>
