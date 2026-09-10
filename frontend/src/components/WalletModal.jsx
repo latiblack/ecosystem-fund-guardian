@@ -1,53 +1,48 @@
-import { useState, useEffect } from "react";
-import { X, Wallet, ChevronRight, Copy, Check, QrCode, Smartphone } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, Wallet, Copy, Check } from "lucide-react";
 import { useWallet } from "../context/WalletContext";
 
-const WALLET_OPTIONS = [
-  {
-    id: "metamask",
-    name: "MetaMask",
-    icon: "🦊",
-    color: "#f6851b",
-    description: "Browser extension wallet",
-    type: "injected",
-  },
-  {
-    id: "coinbase",
-    name: "Coinbase Wallet",
-    icon: "©️",
-    color: "#0052ff",
-    description: "Self-custody crypto wallet",
-    type: "injected",
-  },
-  {
-    id: "walletconnect",
-    name: "WalletConnect",
-    icon: "⬡",
-    color: "#3b99fc",
-    description: "Connect via QR code scan",
-    type: "qr",
-  },
-];
-
 export default function WalletModal({ isOpen, onClose }) {
-  const {
-    address,
-    chainId,
-    walletType,
-    connecting,
-    error,
-    connect,
+  const { 
+    address, 
+    chainId, 
+    walletType, 
+    error, 
+    connect, 
+    connectWalletConnect,
     disconnect,
+    isConnected 
   } = useWallet();
-
+  
   const [copied, setCopied] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      setSelectedOption(null);
+      // Initialize WalletConnect modal when opening
+      initWalletConnectModal();
     }
   }, [isOpen]);
+
+  const initWalletConnectModal = async () => {
+    try {
+      const { WalletConnectModal } = await import("@walletconnect/modal");
+      
+      modalRef.current = new WalletConnectModal({
+        projectId: "7dbda9b31e7da7cb396ca5a5ae2f668e",
+        chains: ["eip155:1", "eip155:137", "eip155:42161", "eip155:56", "eip155:10", "eip155:43114"],
+        supportedChains: ["eip155:1", "eip155:137", "eip155:42161", "eip155:56", "eip155:10", "eip155:43114"],
+        metadata: {
+          name: "Ecosystem Fund Guardian",
+          description: "Decentralized ecosystem fund management",
+          url: window.location.origin,
+          icons: [`${window.location.origin}/nav-logo.png`],
+        },
+      });
+    } catch (err) {
+      console.error("Failed to init WalletConnect modal:", err);
+    }
+  };
 
   const handleCopyAddress = () => {
     if (address) {
@@ -57,16 +52,16 @@ export default function WalletModal({ isOpen, onClose }) {
     }
   };
 
-  const handleConnect = async (option) => {
-    setSelectedOption(option);
-
+  const handleConnectWalletConnect = async () => {
     try {
-      const success = await connect();
-      if (success && address) {
-        onClose();
+      // Open the native WalletConnect modal
+      if (modalRef.current) {
+        await modalRef.current.openModal();
+      } else {
+        await connectWalletConnect();
       }
     } catch (err) {
-      console.error("Connection failed:", err);
+      console.error("Failed to open WalletConnect modal:", err);
     }
   };
 
@@ -97,7 +92,7 @@ export default function WalletModal({ isOpen, onClose }) {
           background: "var(--bg-card)",
           border: "1px solid var(--border)",
           borderRadius: 16,
-          maxWidth: 420,
+          maxWidth: 400,
           width: "100%",
           maxHeight: "90vh",
           overflow: "auto",
@@ -160,9 +155,7 @@ export default function WalletModal({ isOpen, onClose }) {
                   marginBottom: 16,
                 }}
               >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: 12 }}
-                >
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                   <div
                     style={{
                       width: 40,
@@ -231,104 +224,8 @@ export default function WalletModal({ isOpen, onClose }) {
                 Disconnect
               </button>
             </div>
-          ) : selectedOption ? (
-            // Connecting State
-            <div style={{ textAlign: "center", padding: "32px 0" }}>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  margin: "0 auto 16px",
-                  borderRadius: "50%",
-                  background: "rgba(212, 255, 0, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Wallet size={32} style={{ color: "var(--accent)" }} />
-              </div>
-              <p
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  marginBottom: 8,
-                }}
-              >
-                Opening{" "}
-                {WALLET_OPTIONS.find((w) => w.id === selectedOption)?.name ||
-                  "wallet"}
-                ...
-              </p>
-              <p
-                style={{
-                  fontSize: 14,
-                  color: "var(--text-dim)",
-                  marginBottom: 24,
-                }}
-              >
-                {selectedOption === "walletconnect"
-                  ? "Scan the QR code with your mobile wallet"
-                  : "Approve the connection in your wallet"}
-              </p>
-              {connecting && (
-                <div style={{ marginTop: 24 }}>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      border: "3px solid var(--border)",
-                      borderTopColor: "var(--accent)",
-                      borderRadius: "50%",
-                      animation: "spin 1s linear infinite",
-                      margin: "0 auto",
-                    }}
-                  />
-                </div>
-              )}
-              {!connecting && (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: "var(--text-dim)",
-                    marginTop: 16,
-                  }}
-                >
-                  If the wallet didn't open,{" "}
-                  <a
-                    href={
-                      selectedOption === "metamask"
-                        ? "https://metamask.io/download/"
-                        : selectedOption === "coinbase"
-                        ? "https://www.coinbase.com/wallet"
-                        : "https://walletconnect.com/"
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "var(--accent)", textDecoration: "none" }}
-                  >
-                    install it here
-                  </a>
-                </p>
-              )}
-              <button
-                onClick={() => setSelectedOption(null)}
-                style={{
-                  marginTop: 24,
-                  padding: "8px 16px",
-                  background: "transparent",
-                  border: "1px solid var(--border)",
-                  borderRadius: 6,
-                  color: "var(--text-dim)",
-                  cursor: "pointer",
-                  fontSize: 13,
-                }}
-              >
-                ← Back
-              </button>
-            </div>
           ) : (
-            // Wallet Selection State
+            // Selection State - Show WalletConnect option that opens native modal
             <>
               <p
                 style={{
@@ -337,63 +234,96 @@ export default function WalletModal({ isOpen, onClose }) {
                   marginBottom: 20,
                 }}
               >
-                Choose a wallet to connect. You'll be prompted to approve the
-                connection.
+                Choose a wallet to connect.
               </p>
 
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 12 }}
-              >
-                {WALLET_OPTIONS.map((wallet) => (
-                  <button
-                    key={wallet.id}
-                    onClick={() => handleConnect(wallet.id)}
-                    disabled={connecting}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      padding: "14px 16px",
-                      background: "transparent",
-                      border: "1px solid var(--border)",
-                      borderRadius: 12,
-                      cursor: connecting ? "not-allowed" : "pointer",
-                      color: "var(--text)",
-                      fontSize: 15,
-                      width: "100%",
-                      textAlign: "left",
-                    }}
-                  >
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* MetaMask / Injected Wallet */}
+                <button
+                  onClick={async () => {
+                    const success = await connect();
+                    if (success) onClose();
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 16px",
+                    background: "transparent",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    color: "var(--text)",
+                    fontSize: 15,
+                    width: "100%",
+                    textAlign: "left",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div
-                      style={{ display: "flex", alignItems: "center", gap: 12 }}
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        background: "#f6851b",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                      }}
                     >
-                      <div
-                        style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: 8,
-                          background: wallet.color,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 18,
-                        }}
-                      >
-                        {wallet.icon}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 600 }}>{wallet.name}</div>
-                        <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
-                          {wallet.description}
-                        </div>
+                      🦊
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>MetaMask</div>
+                      <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
+                        Browser extension
                       </div>
                     </div>
-                    <ChevronRight
-                      size={18}
-                      style={{ color: "var(--text-dim)" }}
-                    />
-                  </button>
-                ))}
+                  </div>
+                </button>
+
+                {/* WalletConnect - Opens native WC modal */}
+                <button
+                  onClick={handleConnectWalletConnect}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 16px",
+                    background: "transparent",
+                    border: "1px solid var(--border)",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    color: "var(--text)",
+                    fontSize: 15,
+                    width: "100%",
+                    textAlign: "left",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        background: "#3b99fc",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                      }}
+                    >
+                      ⬡
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>WalletConnect</div>
+                      <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
+                        Scan QR code with mobile wallet
+                      </div>
+                    </div>
+                  </div>
+                </button>
               </div>
 
               <p
@@ -410,13 +340,6 @@ export default function WalletModal({ isOpen, onClose }) {
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
