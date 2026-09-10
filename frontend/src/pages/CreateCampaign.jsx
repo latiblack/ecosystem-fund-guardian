@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
   Megaphone, Landmark, Code, Users, Calendar, Gift,
