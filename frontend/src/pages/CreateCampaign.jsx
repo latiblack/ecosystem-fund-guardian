@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
@@ -228,7 +227,7 @@ export default function CreateCampaign() {
 
   return (
     <div className="create-page">
-      <Link to="/" className="back-link"><ArrowLeft size={14} /> Back</Link>
+      <a href="/" className="back-link"><ArrowLeft size={14} /> Back</a>
 
       <div className="wizard-steps">
         {stepLabels.map((label, i) => (
@@ -429,8 +428,8 @@ export default function CreateCampaign() {
             {fund.amount} {fund.token} locked for {fund.duration} days. Your community can now see every rule, payment, and verdict.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-            <Link to="/explore" className="btn btn-primary">View Projects</Link>
-            <Link to="/" className="btn btn-outline">Back Home</Link>
+            <a href="/explore" className="btn btn-primary">View Projects</a>
+            <a href="/" className="btn btn-outline">Back Home</a>
           </div>
         </div>
       )}

@@ -1,4 +1,3 @@
-import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useWallet } from "../context/WalletContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -21,16 +20,16 @@ import {
 } from "lucide-react";
 
 export default function Landing() {
-  const navigate = useNavigate();
-  const { isAuthenticated } = useWallet();
+  const { isConnected } = useWallet();
   const { openConnectModal } = useConnectModal();
 
-  const handleLockFund = () => {
-    if (!isAuthenticated) {
+  const handleLockFund = (e) => {
+    e.preventDefault();
+    if (!isConnected) {
       openConnectModal();
       return;
     }
-    navigate("/create");
+    window.location.href = "/create";
   };
 
   return (
@@ -56,9 +55,9 @@ export default function Landing() {
           Your community sees exactly where the money goes.
         </p>
         <div className="hero-actions">
-          <a href="/create" className="btn btn-primary btn-lg">
+          <button onClick={handleLockFund} className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
-          </a>
+          </button>
           <a href="/explore" className="btn btn-outline btn-lg">
             Explore Funds
           </a>
@@ -235,9 +234,9 @@ export default function Landing() {
         <h2>Start proving.<br />Stop hoping.</h2>
         <p>Lock your ecosystem fund. Define the rules. Let GenLayer verify every payment for your community.</p>
         <div className="hero-actions">
-          <a href="/create" className="btn btn-primary btn-lg">
+          <button onClick={handleLockFund} className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
-          </a>
+          </button>
         </div>
       </section>
 
