@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useWallet } from "../context/WalletContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   ShieldAlert,
   Eye,
