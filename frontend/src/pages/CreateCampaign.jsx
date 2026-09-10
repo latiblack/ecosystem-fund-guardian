@@ -109,9 +109,11 @@ export default function CreateCampaign() {
     if (!window.ethereum || !address) {
       throw new Error("No wallet connected. Please connect your wallet first.");
     }
-    const chainId = await window.ethereum.request({ method: "eth_chainId" });
-    if (chainId !== "0x1091") { // Bradbury testnet or fallback
-      throw new Error("Please switch your wallet to the correct network.");
+    // Verify it's an EVM-compatible chain (any valid chainId is acceptable)
+    const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
+    const chainId = parseInt(chainIdHex, 16);
+    if (isNaN(chainId) || chainId < 1) {
+      throw new Error("Please connect to an EVM-compatible network.");
     }
     const signature = await window.ethereum.request({
       method: "personal_sign",

@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useWallet } from "../context/WalletContext";
 import {
   ShieldAlert,
   Eye,
@@ -18,6 +19,20 @@ import {
 } from "lucide-react";
 
 export default function Landing() {
+  const navigate = useNavigate();
+  const { address, connect } = useWallet();
+
+  const handleLockFund = async () => {
+    if (!address) {
+      await connect();
+      if (!address) {
+        // User cancelled or failed to connect
+        return;
+      }
+    }
+    navigate("/create");
+  };
+
   return (
     <div className="landing">
       {/* Hero */}
@@ -41,9 +56,9 @@ export default function Landing() {
           Your community sees exactly where the money goes.
         </p>
         <div className="hero-actions">
-          <Link to="/create" className="btn btn-primary btn-lg">
+          <button onClick={handleLockFund} className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
-          </Link>
+          </button>
           <Link to="/explore" className="btn btn-outline btn-lg">
             Explore Funds
           </Link>
