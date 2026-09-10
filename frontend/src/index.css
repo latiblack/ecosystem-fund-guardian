@@ -1191,38 +1191,40 @@ a:hover { text-decoration: underline; }
 }
 
 /* ──────────────────────────────────────────────
-   WALLET BUTTON
+   WALLET CONNECT BUTTON - PROMINENT
    ────────────────────────────────────────────── */
-.btn-wallet {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-card);
-  color: var(--text);
-  font-family: var(--font-heading);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
+.rk-dialog-button {
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 20px rgba(212, 255, 0, 0.5) !important;
+  transition: all 0.3s !important;
 }
 
-.btn-wallet:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+.rk-dialog-button:hover {
+  background: transparent !important;
+  color: var(--accent) !important;
+  box-shadow: 0 0 30px rgba(212, 255, 0, 0.8) !important;
 }
 
-.btn-wallet.btn-connected {
-  border-color: var(--accent);
-  color: var(--accent);
+/* Force visible connect button */
+[data-testid="connect-button"] {
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 20px rgba(212, 255, 0, 0.5) !important;
+  animation: pulse 2s infinite !important;
 }
 
-.btn-wallet:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 255, 0, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(212, 255, 0, 1); }
 }
 
 /* ──────────────────────────────────────────────
