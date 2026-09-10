@@ -97,12 +97,13 @@ a:hover { text-decoration: underline; }
    MOBILE MENU STYLES
    ────────────────────────────────────────────── */
 .menu-toggle {
-  display: none;
+  display: flex;
   background: none;
   border: none;
   color: var(--accent);
   cursor: pointer;
   padding: 4px;
+  margin-left: auto;
   transition: transform 0.2s;
 }
 
