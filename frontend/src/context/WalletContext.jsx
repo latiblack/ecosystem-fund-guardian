@@ -68,7 +68,7 @@ export const useWalletAuth = () => {
   };
 };
 
-export function WalletProvider({ children }) {
+export default function WalletProvider({ children }) {
   const auth = useWalletAuth();
 
   return (
