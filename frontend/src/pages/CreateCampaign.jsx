@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
   Megaphone, Landmark, Code, Users, Calendar, Gift,
-  Wallet, Globe, ChevronDown,
+  ChevronDown,
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
@@ -252,39 +251,6 @@ export default function CreateCampaign() {
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
               Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
             </p>
-
-            {!isConnected && (
-              <div style={{ marginBottom: 20, padding: 16, background: "rgba(212, 255, 0, 0.1)", border: "1px solid var(--accent)", borderRadius: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                  <Wallet size={20} style={{ color: "var(--accent)" }} />
-                  <span style={{ fontWeight: 600 }}>Connect Wallet Required</span>
-                </div>
-                <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 12 }}>
-                  You need to connect your wallet to create a project and lock funds.
-                </p>
-                <button 
-                  type="button" 
-                  className="btn btn-primary"
-                  onClick={openConnectModal}
-                >
-                  <Wallet size={16} /> Connect Wallet
-                </button>
-              </div>
-            )}
-
-            {isConnected && (
-              <div style={{ marginBottom: 20, padding: 16, background: "rgba(34, 197, 94, 0.1)", border: "1px solid #22c55e", borderRadius: 8 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <CheckCircle2 size={20} style={{ color: "#22c55e" }} />
-                  <div>
-                    <div style={{ fontWeight: 600 }}>Connected</div>
-                    <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
-                      {address?.slice(0, 6)}...{address?.slice(-4)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             <div className="form-group">
               <label>Project Name *</label>

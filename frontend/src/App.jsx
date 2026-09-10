@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
 import { metaMask, coinbaseWallet, baseAccount, walletConnect } from "@wagmi/connectors";
 import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
-import { RainbowKitProvider, useConnectModal, getDefaultWallets } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
 import { Menu, X, Wallet } from "lucide-react";
@@ -46,15 +46,8 @@ const queryClient = new QueryClient();
 function Navbar() {
   const [open, setOpen] = useState(false);
   const location = window.location.pathname;
-  const { openConnectModal } = useConnectModal();
-  const { address, isConnected } = useAccount();
-
   const isLanding = location === "/";
   const close = () => setOpen(false);
-
-  const shortAddr = address
-    ? `${address.slice(0, 6)}...${address.slice(-4)}`
-    : null;
 
   return (
     <>
@@ -74,16 +67,8 @@ function Navbar() {
         <Link to="/create" onClick={close}>Create Project</Link>
         <Link to="/submit" onClick={close}>Submit Proof</Link>
 
-        {isConnected ? (
-          <button className="btn btn-wallet btn-connected">
-            <Wallet size={14} />
-            <span>{shortAddr}</span>
-          </button>
-        ) : (
-          <button className="btn btn-wallet" onClick={openConnectModal}>
-            <Wallet size={14} />
-            <span>Connect Wallet</span>
-          </button>
+        {!isLanding && (
+          <ConnectButton />
         )}
       </div>
     </nav>
