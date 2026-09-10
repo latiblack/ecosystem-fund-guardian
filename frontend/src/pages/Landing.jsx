@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "../context/WalletContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { supabase } from "../lib/supabase";
 import {
   ShieldAlert,
   Eye,
@@ -20,16 +21,53 @@ import {
 } from "lucide-react";
 
 export default function Landing() {
-  const { isConnected } = useWallet();
+  const { isConnected, connectWallet, walletAddress } = useWallet();
   const { openConnectModal } = useConnectModal();
+  const [projects, setProjects] = useState([]);
 
-  const handleLockFund = (e) => {
-    e.preventDefault();
+  // Load projects from Supabase
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (err) {
+      console.error('Failed to load projects:', err);
+    }
+  };
+
+  const handleLockFund = () => {
     if (!isConnected) {
-      openConnectModal();
+      // Show connect modal first
+      if (openConnectModal) {
+        openConnectModal();
+      } else {
+        connectWallet();
+      }
       return;
     }
+    // Wallet connected - redirect to create page
     window.location.href = "/create";
+  };
+
+  const handleExplore = () => {
+    if (!isConnected) {
+      if (openConnectModal) {
+        openConnectModal();
+      } else {
+        connectWallet();
+      }
+      return;
+    }
+    window.location.href = "/explore";
   };
 
   return (
@@ -58,11 +96,39 @@ export default function Landing() {
           <button onClick={handleLockFund} className="btn btn-primary btn-lg">
             Lock Your Fund <ChevronRight size={18} />
           </button>
-          <a href="/explore" className="btn btn-outline btn-lg">
+          <button onClick={handleExplore} className="btn btn-outline btn-lg">
             Explore Funds
-          </a>
+          </button>
         </div>
+
+        {/* Wallet Info Banner */}
+        {isConnected && walletAddress && (
+          <div className="wallet-banner">
+            <CheckCircle2 size={16} color="#d4ff00" />
+            <span>Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+          </div>
+        )}
       </section>
+
+      {/* Projects Section - Only show if connected */}
+      {isConnected && projects.length > 0 && (
+        <section className="projects-section">
+          <h2>Recent Projects</h2>
+          <div className="projects-grid">
+            {projects.slice(0, 6).map((project) => (
+              <div key={project.id} className="project-card">
+                <h3>{project.name}</h3>
+                <p>{project.description?.slice(0, 100)}...</p>
+                <div className="project-meta">
+                  <Coins size={14} />
+                  <span>{project.amount} {project.token}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <a href="/explore" className="btn btn-outline">View All Projects</a>
+        </section>
+      )}
 
       {/* Powered by GenLayer */}
       <section className="genlayer-section">
@@ -154,77 +220,6 @@ export default function Landing() {
               <h3>Release or Lock</h3>
               <p>Verified — funds released. Rejected — funds stay locked. Your community sees both.</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Key Feature */}
-      <section className="section">
-        <div className="section-label">WHY THIS WORKS</div>
-        <h2>The rules are public.<br />The enforcement is automatic.<br />Your community sees everything.</h2>
-        <p className="section-desc">
-          No simple smart contract can read a URL, understand what it contains,
-          and judge whether it meets natural language requirements.
-          GenLayer's AI consensus can. That's what makes transparent ecosystem spending possible.
-        </p>
-        <div className="feature-grid">
-          <div className="feature-card">
-            <FileCheck size={20} className="icon-accent" />
-            <h3>Natural Language Rules</h3>
-            <p>Define spending rules in plain English. No code needed. Your community can read and understand every rule.</p>
-          </div>
-          <div className="feature-card">
-            <Eye size={20} className="icon-accent" />
-            <h3>GenLayer AI Consensus</h3>
-            <p>GenLayer validators reach consensus on evidence using AI — reading URLs, evaluating proofs, and enforcing rules on-chain.</p>
-          </div>
-          <div className="feature-card">
-            <Lock size={20} className="icon-accent" />
-            <h3>Contract Governance</h3>
-            <p>One contract governs another. The Spending Contract cannot pay without the Governance Contract's permission. No team override.</p>
-          </div>
-          <div className="feature-card">
-            <ShieldAlert size={20} className="icon-accent" />
-            <h3>Public Audit Trail</h3>
-            <p>Every disbursement, every verdict, every outcome — visible to your community. No hidden wallets. No off-chain deals.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Use Cases */}
-      <section className="section">
-        <div className="section-label">USE CASES</div>
-        <h2>Any fund. Any project. Any token.</h2>
-        <div className="usecase-grid">
-          <div className="usecase-card">
-            <Megaphone size={20} className="icon-accent" />
-            <h3>Marketing Campaigns</h3>
-            <p>Show your community that marketing funds went to real campaigns and creator promotions — not sitting in a wallet.</p>
-          </div>
-          <div className="usecase-card">
-            <Landmark size={20} className="icon-accent" />
-            <h3>Ecosystem Grants</h3>
-            <p>Prove to your community that grants were released for completed milestones — not handed out in bulk with no accountability.</p>
-          </div>
-          <div className="usecase-card">
-            <Code size={20} className="icon-accent" />
-            <h3>Developer Grants</h3>
-            <p>Show your community that developer payments matched actual delivered features, integrations, and open-source contributions.</p>
-          </div>
-          <div className="usecase-card">
-            <Users size={20} className="icon-accent" />
-            <h3>Partnerships</h3>
-            <p>Make partner payments transparent to your community — tied to what was actually delivered, not just a handshake.</p>
-          </div>
-          <div className="usecase-card">
-            <Calendar size={20} className="icon-accent" />
-            <h3>Event Sponsorships</h3>
-            <p>Prove to your community that sponsorship budgets went to events that actually delivered the promised exposure.</p>
-          </div>
-          <div className="usecase-card">
-            <Gift size={20} className="icon-accent" />
-            <h3>Community Programs</h3>
-            <p>Show your community that ambassadors and contributors were rewarded for real activity — not just connections.</p>
           </div>
         </div>
       </section>

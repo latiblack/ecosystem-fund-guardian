@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "../context/WalletContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { supabase } from "../lib/supabase";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
   Megaphone, Landmark, Code, Users, Calendar, Gift,
-  ChevronDown,
 } from "lucide-react";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
 
 const CATEGORIES = [
   { id: "marketing", name: "Marketing Campaigns", icon: Megaphone, desc: "Verify paid campaigns, creator promotions, and marketing deliverables before releasing funds." },
@@ -19,77 +17,12 @@ const CATEGORIES = [
 ];
 
 const RULE_TEMPLATES = {
-  marketing: `This ecosystem fund is for marketing and promotional activities.
-Approved uses:
-- Creator content campaigns (social media, threads, videos)
-- Paid advertising and influencer partnerships
-- AMA sessions and community calls
-- Content localization and regional outreach
-
-NOT approved:
-- Team compensation or operational expenses
-- Token buybacks or market making
-- Direct token transfers without deliverable proof`,
-
-  ecosystem: `This ecosystem fund is for growing the broader ecosystem through grants.
-Approved uses:
-- Developer grants tied to shipped milestones
-- Integration bounties for partner protocols
-- Ecosystem research and tooling
-- Open-source contributions with verified commits
-
-NOT approved:
-- Internal team salaries
-- Investments or token purchases
-- Grants without verifiable deliverables`,
-
-  developer: `This ecosystem fund is for developer grants and technical contributions.
-Approved uses:
-- Feature development with merged pull requests
-- SDK and tooling contributions
-- Bug fixes and security audits
-- Documentation and developer tutorials
-
-NOT approved:
-- Non-technical work or marketing
-- Speculative research without deliverables
-- Recurring payments without milestone proof`,
-
-  partnerships: `This ecosystem fund is for partnership-related payments.
-Approved uses:
-- Technical integrations with partner protocols
-- Co-marketing campaigns with verified deliverables
-- Joint product launches with proof of execution
-- Cross-protocol liquidity or collaboration incentives
-
-NOT approved:
-- Partnership payments without deliverable proof
-- Token swaps without clear mutual benefit
-- Advisory fees without measurable contributions`,
-
-  events: `This ecosystem fund is for event sponsorships and conference presence.
-Approved uses:
-- Conference sponsorships with proof of brand visibility
-- Hackathon prizes with winning project verification
-- Community meetups with attendance proof
-- Speaking engagements and panel participation
-
-NOT approved:
-- Event sponsorships without exposure proof
-- Travel expenses without speaking deliverables
-- Entertainment or hospitality costs`,
-
-  community: `This ecosystem fund is for community growth and ambassador programs.
-Approved uses:
-- Ambassador rewards with verified activity logs
-- Community moderator compensation with contribution proof
-- Translation and localization bounties
-- Community content creation with engagement metrics
-
-NOT approved:
-- Rewards without verifiable activity
-- Airdrops or giveaways without conditions
-- Payments to inactive or unverifiable contributors`,
+  marketing: `This ecosystem fund is for marketing and promotional activities.\nApproved uses:\n- Creator content campaigns (social media, threads, videos)\n- Paid advertising and influencer partnerships\n- AMA sessions and community calls\n- Content localization and regional outreach\n\nNOT approved:\n- Team compensation or operational expenses\n- Token buybacks or market making\n- Direct token transfers without deliverable proof`,
+  ecosystem: `This ecosystem fund is for growing the broader ecosystem through grants.\nApproved uses:\n- Developer grants tied to shipped milestones\n- Integration bounties for partner protocols\n- Ecosystem research and tooling\n- Open-source contributions with verified commits\n\nNOT approved:\n- Internal team salaries\n- Investments or token purchases\n- Grants without verifiable deliverables`,
+  developer: `This ecosystem fund is for developer grants and technical contributions.\nApproved uses:\n- Feature development with merged pull requests\n- SDK and tooling contributions\n- Bug fixes and security audits\n- Documentation and developer tutorials\n\nNOT approved:\n- Non-technical work or marketing\n- Speculative research without deliverables\n- Recurring payments without milestone proof`,
+  partnerships: `This ecosystem fund is for partnership-related payments.\nApproved uses:\n- Technical integrations with partner protocols\n- Co-marketing campaigns with verified deliverables\n- Joint product launches with proof of execution\n- Cross-protocol liquidity or collaboration incentives\n\nNOT approved:\n- Partnership payments without deliverable proof\n- Token swaps without clear mutual benefit\n- Advisory fees without measurable contributions`,
+  events: `This ecosystem fund is for event sponsorships and conference presence.\nApproved uses:\n- Conference sponsorships with proof of brand visibility\n- Hackathon prizes with winning project verification\n- Community meetups with attendance proof\n- Speaking engagements and panel participation\n\nNOT approved:\n- Event sponsorships without exposure proof\n- Travel expenses without speaking deliverables\n- Entertainment or hospitality costs`,
+  community: `This ecosystem fund is for community growth and ambassador programs.\nApproved uses:\n- Ambassador rewards with verified activity logs\n- Community moderator compensation with contribution proof\n- Translation and localization bounties\n- Community content creation with engagement metrics\n\nNOT approved:\n- Rewards without verifiable activity\n- Airdrops or giveaways without conditions\n- Payments to inactive or unverifiable contributors`,
 };
 
 const TOKEN_OPTIONS = [
@@ -110,6 +43,13 @@ export default function CreateCampaign() {
   const [toast, setToast] = useState(null);
   const { address, chainId, isConnected } = useWallet();
   const { openConnectModal } = useConnectModal();
+
+  // Ensure user is connected - redirect if not
+  useEffect(() => {
+    if (!isConnected) {
+      openConnectModal?.();
+    }
+  }, [isConnected]);
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -132,7 +72,7 @@ export default function CreateCampaign() {
     if (!project.name) { showToast("Project name is required", "error"); return; }
     
     if (!isConnected) {
-      openConnectModal();
+      openConnectModal?.();
       showToast("Please connect your wallet first", "error");
       return;
     }
@@ -143,23 +83,26 @@ export default function CreateCampaign() {
       const message = JSON.stringify({ project_id: projectId, name: project.name });
       const signature = await signWithWallet(message);
       
-      const res = await fetch(`${API}/api/project`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          project_id: projectId,
+      // Save to Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          id: projectId,
           name: project.name,
           description: project.description,
-          creator: address,
-          signature,
-        }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
+          logo_url: project.logo,
+          creator_address: address,
+          chain_id: chainId,
+          created_at: new Date().toISOString(),
+        }])
+        .select();
+      
+      if (error) throw error;
+      
       setStep(2);
       showToast("Project created successfully!");
     } catch (err) {
-      showToast(err.message, "error");
+      showToast(err.message || "Failed to create project", "error");
     } finally {
       setLoading(false);
     }
@@ -175,7 +118,7 @@ export default function CreateCampaign() {
     e.preventDefault();
     
     if (!isConnected) {
-      openConnectModal();
+      openConnectModal?.();
       showToast("Please connect your wallet to lock funds", "error");
       return;
     }
@@ -194,36 +137,52 @@ export default function CreateCampaign() {
       
       const tokenInfo = TOKEN_OPTIONS.find(t => t.symbol === fund.token) || { symbol: fund.token, type: "unknown" };
       
-      const res = await fetch(`${API}/api/campaign`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          campaignId,
+      // Save campaign to Supabase
+      const { error } = await supabase
+        .from('campaigns')
+        .insert([{
+          id: campaignId,
           project_id: projectId,
-          creator: address,
+          category: category.id,
+          creator_address: address,
           signature,
           rules: fund.rules,
-          maxPerRecipient: "0",
-          durationDays: Number(fund.duration) || 90,
+          max_per_recipient: "0",
+          duration_days: Number(fund.duration) || 90,
           recipients: fund.recipients,
-          tokenAddress: tokenInfo.type === "erc20" ? tokenInfo.address : "native",
-          tokenSymbol: tokenInfo.symbol,
-          chainId: chainId,
-        }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
+          token_address: tokenInfo.type === "erc20" ? tokenInfo.address : "native",
+          token_symbol: tokenInfo.symbol,
+          chain_id: chainId,
+          created_at: new Date().toISOString(),
+        }]);
+      
+      if (error) throw error;
       
       setStep(4);
       showToast("Fund locked successfully!");
     } catch (err) {
-      showToast(err.message, "error");
+      showToast(err.message || "Failed to lock fund", "error");
     } finally {
       setLoading(false);
     }
   };
 
   const stepLabels = ["Project", "Confirm", "Lock Fund"];
+
+  if (!isConnected) {
+    return (
+      <div className="create-page" style={{ textAlign: "center", padding: "48px 24px" }}>
+        <Lock size={56} style={{ color: "var(--accent)", marginBottom: 16 }} />
+        <h2>Connect Your Wallet</h2>
+        <p style={{ color: "var(--text-dim)", marginBottom: 24 }}>
+          You need to connect your wallet to create a project and lock funds.
+        </p>
+        <button className="btn btn-primary" onClick={() => openConnectModal?.()}>
+          Connect Wallet
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="create-page">
@@ -283,7 +242,7 @@ export default function CreateCampaign() {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }} disabled={loading || !isConnected}>
+          <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }} disabled={loading}>
             {loading ? <><Loader2 size={16} className="spin" /> Saving...</> : <><ArrowRight size={16} /> Next — Choose Category</>}
           </button>
         </form>
@@ -404,16 +363,10 @@ export default function CreateCampaign() {
             <button type="button" className="btn btn-outline" onClick={() => setStep(2)}>
               <ArrowLeft size={16} /> Back
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading || !isConnected}>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
               {loading ? <><Loader2 size={16} className="spin" /> Processing...</> : <><Lock size={16} /> Lock Fund</>}
             </button>
           </div>
-          
-          {!isConnected && (
-            <p style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 8, textAlign: "center" }}>
-              Connect your wallet to lock funds
-            </p>
-          )}
         </form>
       )}
 

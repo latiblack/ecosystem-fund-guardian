@@ -1,156 +1,99 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  Search,
-  ArrowRight,
-  Lock,
-  TrendingUp,
-  ShieldCheck,
-  Layers,
-  DollarSign,
-} from "lucide-react";
-import { SAMPLE_PROJECTS } from "../data/sampleProjects";
+import { useState, useEffect } from "react";
+import { useWallet } from "../context/WalletContext";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { supabase, getAllProjects } from "../lib/supabase";
+import { Search, Loader2, Lock, Coins } from "lucide-react";
 
 export default function Explore() {
-  const [search, setSearch] = useState("");
+  const { isConnected } = useWallet();
+  const { openConnectModal } = useConnectModal();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const filtered = SAMPLE_PROJECTS.filter((p) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.tags.some((t) => t.toLowerCase().includes(q)) ||
-      p.chain.toLowerCase().includes(q)
-    );
-  });
+  // Load projects from Supabase
+  useEffect(() => {
+    loadProjects();
+  }, []);
 
-  const totalFunds = SAMPLE_PROJECTS.reduce((s, p) => s + p.fundCount, 0);
-  const totalLocked = SAMPLE_PROJECTS.reduce(
-    (s, p) => s + parseFloat(p.totalLocked.replace(/,/g, "")),
-    0
+  const loadProjects = async () => {
+    try {
+      const data = await getAllProjects();
+      setProjects(data);
+    } catch (err) {
+      console.error('Failed to load projects:', err);
+      // Fallback to empty array
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredProjects = projects.filter(project => 
+    project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  return (
-    <div>
-      <div className="explore-header">
-        <div>
-          <h1>Ecosystem Funds</h1>
-          <p className="dim">
-            Browse projects with locked ecosystem funds. Every disbursement is publicly verified.
-          </p>
-        </div>
+  if (!isConnected) {
+    return (
+      <div style={{ textAlign: "center", padding: "48px 24px" }}>
+        <Lock size={56} style={{ color: "var(--accent)", marginBottom: 16 }} />
+        <h2>Connect Your Wallet</h2>
+        <p style={{ color: "var(--text-dim)", marginBottom: 24 }}>
+          You need to connect your wallet to explore projects and lock funds.
+        </p>
+        <button className="btn btn-primary" onClick={() => openConnectModal?.()}>
+          Connect Wallet
+        </button>
       </div>
+    );
+  }
 
+  return (
+    <div className="explore-page">
       <div className="search-bar">
         <Search size={16} />
         <input
           type="text"
-          placeholder="Search by project name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search projects..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
-      {/* Stats bar */}
-      <div className="explore-stats">
-        <div className="explore-stat">
-          <div className="explore-stat-icon"><Layers size={18} /></div>
-          <div className="explore-stat-content">
-            <span className="explore-stat-value">{SAMPLE_PROJECTS.length}</span>
-            <span className="explore-stat-label">Projects</span>
-          </div>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "48px" }}>
+          <Loader2 size={32} className="spin" />
         </div>
-        <div className="explore-stat">
-          <div className="explore-stat-icon"><Lock size={18} /></div>
-          <div className="explore-stat-content">
-            <span className="explore-stat-value">{totalFunds}</span>
-            <span className="explore-stat-label">Active Funds</span>
-          </div>
-        </div>
-        <div className="explore-stat">
-          <div className="explore-stat-icon"><DollarSign size={18} /></div>
-          <div className="explore-stat-content">
-            <span className="explore-stat-value">${(totalLocked / 1e6).toFixed(1)}M</span>
-            <span className="explore-stat-label">Total Locked</span>
-          </div>
-        </div>
-        <div className="explore-stat">
-          <div className="explore-stat-icon"><ShieldCheck size={18} /></div>
-          <div className="explore-stat-content">
-            <span className="explore-stat-value">
-              {SAMPLE_PROJECTS.reduce(
-                (s, p) => s + p.funds.reduce((fs, f) => fs + f.verified, 0),
-                0
-              )}
-            </span>
-            <span className="explore-stat-label">Verified</span>
-          </div>
-        </div>
-      </div>
-
-      {filtered.length === 0 && (
+      ) : filteredProjects.length === 0 ? (
         <div className="empty-state">
-          <Search size={48} className="icon-dim" />
-          <h2>No projects found</h2>
-          <p>Try a different search term</p>
+          <Coins size={48} className="icon-dim" />
+          <h2>No Projects Found</h2>
+          <p>Be the first to create a transparent ecosystem fund!</p>
+          <a href="/create" className="btn btn-primary" style={{ marginTop: 16 }}>
+            Create Project
+          </a>
+        </div>
+      ) : (
+        <div className="projects-grid">
+          {filteredProjects.map((project) => (
+            <div key={project.id} className="project-card">
+              {project.logo_url && (
+                <img src={project.logo_url} alt={project.name} className="project-logo" />
+              )}
+              <h3>{project.name}</h3>
+              <p className="project-desc">{project.description?.slice(0, 100)}...</p>
+              <div className="project-meta">
+                <span className="creator">Creator: {project.creator_address?.slice(0, 6)}...{project.creator_address?.slice(-4)}</span>
+                <span className="chain">Chain: {project.chain_id}</span>
+              </div>
+              <a href={`/project/${project.id}`} className="btn btn-outline btn-small">
+                View Details
+              </a>
+            </div>
+          ))}
         </div>
       )}
-
-      <div className="project-grid">
-        {filtered.map((project) => (
-          <Link to={`/project/${project.id}`} key={project.id} className="project-card">
-            <div className="project-card-header">
-              <div className="project-logo">{project.logo}</div>
-              <div className="project-info">
-                <h3>{project.name}</h3>
-                <span className="project-chain">{project.chain}</span>
-              </div>
-              <span className={`badge ${project.status}`}>{project.status}</span>
-            </div>
-
-            <div className="project-tags">
-              {project.tags.map((tag, i) => (
-                <span key={i} className={`tag tag-${i % 4}`}>{tag}</span>
-              ))}
-            </div>
-
-            <div className="project-stats">
-              <div className="project-stat">
-                <Lock size={12} className="icon-dim" />
-                <span className="project-stat-value">{project.totalLocked}</span>
-                <span className="project-stat-label">{project.token}</span>
-              </div>
-              <div className="project-stat">
-                <TrendingUp size={12} className="icon-accent" />
-                <span className="project-stat-value accent">{project.disbursed}</span>
-                <span className="project-stat-label">out</span>
-              </div>
-            </div>
-
-            {/* Mini progress bar */}
-            <div className="project-progress">
-              <div className="project-progress-bar">
-                <div
-                  className="project-progress-fill"
-                  style={{
-                    width: `${(parseFloat(project.disbursed.replace(/,/g, "")) / parseFloat(project.totalLocked.replace(/,/g, ""))) * 100}%`,
-                  }}
-                />
-              </div>
-              <span className="project-progress-label">
-                {Math.round((parseFloat(project.disbursed.replace(/,/g, "")) / parseFloat(project.totalLocked.replace(/,/g, ""))) * 100)}% disbursed
-              </span>
-            </div>
-
-            <div className="project-card-footer">
-              <span className="dim">{project.fundCount} funds</span>
-              <span className="project-arrow">
-                View Details <ArrowRight size={14} />
-              </span>
-            </div>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

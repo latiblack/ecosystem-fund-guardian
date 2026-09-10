@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
 import { metaMask, coinbaseWallet, baseAccount, walletConnect } from "@wagmi/connectors";
@@ -9,24 +9,14 @@ import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-m
 import "@rainbow-me/rainbowkit/styles.css";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
-import ProjectDetail from "./pages/ProjectDetail";
 import CreateCampaign from "./pages/CreateCampaign";
-import SubmitEvidence from "./pages/SubmitEvidence";
-import { WalletProvider } from "./context/WalletContext";
-import "./index.css";
+import WalletProvider from "./context/WalletContext";
+import Navbar from "./components/Navbar";
 
-// WalletConnect project ID
 const WALLETCONNECT_PROJECT_ID = "7dbda9b31e7da7cb396ca5a5ae2f668e";
+const { connectors } = getDefaultWallets({ appName: "Ecosystem Fund Guardian", projectId: WALLETCONNECT_PROJECT_ID });
 
-// Get default wallets with our WalletConnect projectId
-const { connectors: defaultConnectors } = getDefaultWallets({
-  appName: "Ecosystem Fund Guardian",
-  projectId: WALLETCONNECT_PROJECT_ID,
-  chains: [mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia],
-});
-
-// Create wagmi config
-const config = createConfig({
+const wagmiConfig = createConfig({
   chains: [mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia],
   transports: {
     [mainnet.id]: http(),
@@ -37,59 +27,71 @@ const config = createConfig({
     [avalanche.id]: http(),
     [sepolia.id]: http(),
   },
-  connectors: defaultConnectors,
-  ssr: true,
+  connectors: [
+    ...connectors,
+    metaMask({ shimDisconnect: true }),
+    baseAccount({ apiKey: import.meta.env.VITE_BASE_API_KEY || undefined }),
+  ],
 });
 
 const queryClient = new QueryClient();
 
-function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const location = window.location.pathname;
-  const isLanding = location === "/";
+// Auth Guard Component
+function ProtectedRoute({ children, requireAuth = true }) {
+  const { isConnected } = useAccount();
+  
+  if (requireAuth && !isConnected) {
+    // Redirect to landing page where they can see the connect button
+    return <Navigate to="/" replace />;
+  }
+  
+  return <>{children}</>;
+}
 
+function AppContent() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isConnected } = useAccount();
+  
   return (
-    <>
-    <nav className="navbar">
-      <a href="/" className="logo" >
-        <img src="/nav-logo.png" alt="EFG" className="logo-img" />
-      </a>
-
-      {!isLanding && <button className="menu-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>}
-
-      <div className={`nav-links ${isOpen ? 'open' : ''}`}>
-        <a href="/explore" onClick={() => setIsOpen(false)}>Explore</a>
-        <a href="/create" onClick={() => setIsOpen(false)}>Create Project</a>
-        <a href="/submit" onClick={() => setIsOpen(false)}>Submit Proof</a>
-
-        {!isLanding && <ConnectButton />}
-      </div>
-    </nav>
-    </>
+    <div className="app">
+      <Navbar 
+        isConnected={isConnected} 
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      />
+      
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route 
+          path="/explore" 
+          element={
+            <ProtectedRoute requireAuth={false}>
+              <Explore />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/create" 
+          element={
+            <ProtectedRoute requireAuth={true}>
+              <CreateCampaign />
+            </ProtectedRoute>
+          } 
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </div>
   );
 }
 
 export default function App() {
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <WalletProvider>
             <BrowserRouter>
-              <div className="app">
-                <Navbar />
-                <main className="main">
-                  <Routes>
-                    <Route path="/" element={<Landing />} />
-                    <Route path="/explore" element={<Explore />} />
-                    <Route path="/project/:id" element={<ProjectDetail />} />
-                    <Route path="/create" element={<CreateCampaign />} />
-                    <Route path="/submit" element={<SubmitEvidence />} />
-                  </Routes>
-                </main>
-              </div>
+              <AppContent />
             </BrowserRouter>
           </WalletProvider>
         </RainbowKitProvider>
