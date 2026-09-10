@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X, Shield, Wallet } from "lucide-react";
+import { Menu, X, Wallet } from "lucide-react";
 import { WalletProvider, useWallet } from "./context/WalletContext";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
@@ -24,8 +24,7 @@ function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/" className="logo" onClick={close}>
-        <Shield size={18} />
-        <span>EFG</span>
+        <img src="/nav-logo.png" alt="EFG" className="logo-img" />
       </Link>
 
       {!isLanding && (
