@@ -165,7 +165,7 @@ export default function CreateCampaign() {
         <div className="card">
           <h2>Create Your Project</h2>
           <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
-            Tell your community about your project. This will appear on the Explore page.
+            Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
           </p>
 
           <div className="form-group">
