@@ -93,6 +93,9 @@ a:hover { text-decoration: underline; }
 
 .nav-links a:hover { color: var(--accent); text-decoration: none; }
 
+/* ──────────────────────────────────────────────
+   MOBILE MENU STYLES
+   ────────────────────────────────────────────── */
 .menu-toggle {
   display: none;
   background: none;
@@ -100,6 +103,31 @@ a:hover { text-decoration: underline; }
   color: var(--accent);
   cursor: pointer;
   padding: 4px;
+  transition: transform 0.2s;
+}
+
+.menu-toggle:hover {
+  transform: scale(1.1);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: var(--text-dim);
+  font-family: var(--font-heading);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  color: var(--accent);
+  text-decoration: none;
 }
 
 /* ──────────────────────────────────────────────
@@ -1024,15 +1052,41 @@ a:hover { text-decoration: underline; }
     top: 48px;
     left: 0;
     right: 0;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.95);
+    border-bottom: 2px solid var(--accent);
+    backdrop-filter: blur(20px);
     flex-direction: column;
-    padding: 16px 24px;
+    padding: 20px 24px;
     gap: 16px;
     z-index: 100;
+    animation: slideDown 0.3s ease-out;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .nav-links.open { display: flex; }
+
+  .nav-links a {
+    color: var(--text-dim);
+    font-size: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-links a:hover {
+    color: var(--accent);
+    padding-left: 8px;
+    transition: all 0.2s;
+  }
 
   /* Mobile: ConnectButton full width */
   .nav-links [data-testid="connect-button"],
