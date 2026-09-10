@@ -56,11 +56,6 @@ export default function Landing() {
           </div>
           <div className="genlayer-text">
             <h3>Powered by GenLayer</h3>
-            <p>
-              The only blockchain where smart contracts can read URLs, understand natural language,
-              and reach AI consensus on-chain. GenLayer validators verify every disbursement
-              against your spending rules — automatically.
-            </p>
           </div>
         </div>
         <div className="genlayer-divider-bottom" />
@@ -234,8 +229,10 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="footer">
-        <p>Ecosystem Fund Guardian</p>
-        <p className="footer-sub">Powered by GenLayer. One contract governs another. Every payment is visible to your community.</p>
+        <div className="footer-powered">
+          <img src="/genlayer-logo.jpeg" alt="GenLayer" className="footer-logo" />
+          <span>Powered by GenLayer</span>
+        </div>
       </footer>
     </div>
   );
