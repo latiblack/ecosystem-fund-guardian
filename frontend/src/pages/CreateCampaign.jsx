@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useWallet } from "../context/WalletContext";
+import { useWallet, useEVMChain } from "../context/WalletContext";
+import WalletModal from "../components/WalletModal";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
-  Megaphone, Landmark, Code, Users, Calendar, Gift,
+  Megaphone, Landmark, Code, Users, Calendar, Gift, AlertCircle,
+  Wallet, Globe, ChevronDown,
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:3002";
@@ -91,14 +93,26 @@ NOT approved:
 - Payments to inactive or unverifiable contributors`,
 };
 
+// Common tokens for selection
+const TOKEN_OPTIONS = [
+  { symbol: "ETH", name: "Ethereum", type: "native" },
+  { symbol: "USDC", name: "USD Coin", type: "erc20", address: "0xA0b86a33E6441E6C7636C8d5b0e2B3A5A0b0c0D1" },
+  { symbol: "USDT", name: "Tether", type: "erc20", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
+  { symbol: "DAI", name: "Dai", type: "erc20", address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
+  { symbol: "MATIC", name: "Polygon", type: "native" },
+  { symbol: "BNB", name: "BNB", type: "native" },
+];
+
 export default function CreateCampaign() {
   const [step, setStep] = useState(1);
-  const [project, setProject] = useState({ name: "", logo: "", description: "", chain: "GenLayer" });
+  const [showWalletModal, setShowWalletModal] = useState(false);
+  const [project, setProject] = useState({ name: "", logo: "", description: "", chainId: null });
   const [category, setCategory] = useState(null);
-  const [fund, setFund] = useState({ token: "", amount: "", duration: 90, rules: "", recipients: "" });
+  const [fund, setFund] = useState({ token: "ETH", tokenAddress: "", amount: "", duration: 90, rules: "", recipients: "" });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const { address, connect } = useWallet();
+  const { address, connect, chainId, chainName, walletType, isConnected } = useWallet();
+  const { isValidChain } = useEVMChain();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -109,10 +123,10 @@ export default function CreateCampaign() {
     if (!window.ethereum || !address) {
       throw new Error("No wallet connected. Please connect your wallet first.");
     }
-    // Verify it's an EVM-compatible chain (any valid chainId is acceptable)
+    // Sign on whatever chain the user is on (full EVM compatibility)
     const chainIdHex = await window.ethereum.request({ method: "eth_chainId" });
-    const chainId = parseInt(chainIdHex, 16);
-    if (isNaN(chainId) || chainId < 1) {
+    const currentChainId = parseInt(chainIdHex, 16);
+    if (isNaN(currentChainId) || currentChainId < 1) {
       throw new Error("Please connect to an EVM-compatible network.");
     }
     const signature = await window.ethereum.request({
@@ -122,35 +136,68 @@ export default function CreateCampaign() {
     return signature;
   };
 
-  const waitForConnection = async () => {
-    if (address) return true;
-    await connect();
-    // Wait up to 10 seconds for the user to complete connection
+  const waitForConnection = async (timeout = 15000) => {
+    if (isConnected) return true;
+    
+    // Show wallet modal
+    setShowWalletModal(true);
+    
+    // Wait for connection with timeout
     return new Promise((resolve) => {
-      let checks = 0;
-      const interval = setInterval(() => {
-        checks++;
-        if (address) {
-          clearInterval(interval);
+      const checkInterval = setInterval(() => {
+        if (isConnected) {
+          clearInterval(checkInterval);
+          setShowWalletModal(false);
           resolve(true);
-        } else if (checks > 20) {
-          clearInterval(interval);
-          resolve(false);
         }
       }, 500);
+      
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        setShowWalletModal(false);
+        resolve(false);
+      }, timeout);
+    });
+  };
+
+  const openWalletModal = async () => {
+    setShowWalletModal(true);
+    
+    // Wait for user to connect
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (isConnected) {
+          clearInterval(checkInterval);
+          setShowWalletModal(false);
+          resolve(true);
+        }
+      }, 300);
+      
+      // Auto-close after 30 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        setShowWalletModal(false);
+        resolve(false);
+      }, 30000);
     });
   };
 
   const handleProjectSave = async (e) => {
     e.preventDefault();
     if (!project.name) { showToast("Project name is required", "error"); return; }
-    const connected = await waitForConnection();
-    if (!connected) { showToast("Please connect your wallet to continue", "error"); return; }
+    
+    // Check if wallet is connected
+    if (!isConnected) {
+      const connected = await openWalletModal();
+      if (!connected) { showToast("Please connect your wallet to create a project", "error"); return; }
+    }
+    
     setLoading(true);
     try {
       const projectId = project.name.toLowerCase().replace(/\s+/g, "-");
       const message = JSON.stringify({ project_id: projectId, name: project.name });
       const signature = await signWithWallet(message);
+      
       const res = await fetch(`${API}/api/project`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,7 +205,8 @@ export default function CreateCampaign() {
           project_id: projectId,
           name: project.name,
           description: project.description,
-          chain: project.chain,
+          chainId: chainId,
+          chain: chainName,
           logo_url: project.logo,
           creator: address,
           signature,
@@ -167,6 +215,7 @@ export default function CreateCampaign() {
       const json = await res.json();
       if (json.error) throw new Error(json.error);
       setStep(2);
+      showToast("Project created successfully!");
     } catch (err) {
       showToast(err.message, "error");
     } finally {
@@ -182,18 +231,28 @@ export default function CreateCampaign() {
 
   const handleLockSubmit = async (e) => {
     e.preventDefault();
-    const connected = await waitForConnection();
-    if (!connected) { showToast("Please connect your wallet to lock funds", "error"); return; }
+    
+    // Ensure wallet is connected
+    if (!isConnected) {
+      const connected = await openWalletModal();
+      if (!connected) { showToast("Please connect your wallet to lock funds", "error"); return; }
+    }
+    
     if (!fund.token || !fund.amount || !fund.rules) {
       showToast("Token, amount, and spending rules are required", "error");
       return;
     }
+    
     setLoading(true);
     try {
       const projectId = project.name.toLowerCase().replace(/\s+/g, "-");
       const campaignId = `${projectId}-${category.id}`;
-      const message = JSON.stringify({ campaignId, project_id: projectId });
+      const message = JSON.stringify({ campaignId, project_id: projectId, token: fund.token });
       const signature = await signWithWallet(message);
+      
+      // Find token info
+      const tokenInfo = TOKEN_OPTIONS.find(t => t.symbol === fund.token) || { symbol: fund.token, type: "unknown" };
+      
       const res = await fetch(`${API}/api/campaign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -206,11 +265,32 @@ export default function CreateCampaign() {
           maxPerRecipient: "0",
           durationDays: Number(fund.duration) || 90,
           recipients: fund.recipients,
+          tokenAddress: tokenInfo.type === "erc20" ? tokenInfo.address : "native",
+          tokenSymbol: tokenInfo.symbol,
+          chainId: chainId,
         }),
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
+      
+      // Now lock the tokens
+      const lockRes = await fetch(`${API}/api/campaign/${campaignId}/lock-tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: address,
+          signature: await signWithWallet(`lock:${campaignId}:${fund.amount}`),
+          tokenAddress: tokenInfo.type === "erc20" ? tokenInfo.address : "native",
+          amount: fund.amount,
+          chainId: chainId,
+        }),
+      });
+      
+      const lockJson = await lockRes.json();
+      if (lockJson.error) throw new Error(lockJson.error);
+      
       setStep(4);
+      showToast("Tokens locked successfully!");
     } catch (err) {
       showToast(err.message, "error");
     } finally {
@@ -221,7 +301,7 @@ export default function CreateCampaign() {
   const stepLabels = ["Project", "Confirm", "Lock Fund"];
 
   return (
-    <div>
+    <div className="create-page">
       <Link to="/" className="back-link"><ArrowLeft size={14} /> Back</Link>
 
       <div className="wizard-steps">
@@ -238,6 +318,11 @@ export default function CreateCampaign() {
         ))}
       </div>
 
+      {/* Wallet Modal */}
+      {showWalletModal && (
+        <WalletModal onClose={() => setShowWalletModal(false)} />
+      )}
+
       {/* Step 1: Project Details */}
       {step === 1 && (
         <form onSubmit={handleProjectSave}>
@@ -246,6 +331,43 @@ export default function CreateCampaign() {
             <p style={{ color: "var(--text-dim)", marginBottom: 24, fontSize: 14 }}>
               Define what this fund is for. Your community will see every rule, every payment, every verdict — publicly, automatically.
             </p>
+
+            {!isConnected && (
+              <div style={{ marginBottom: 20, padding: 16, background: "rgba(212, 255, 0, 0.1)", border: "1px solid var(--accent)", borderRadius: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                  <Wallet size={20} style={{ color: "var(--accent)" }} />
+                  <span style={{ fontWeight: 600 }}>Connect Wallet Required</span>
+                </div>
+                <p style={{ fontSize: 13, color: "var(--text-dim)", marginBottom: 12 }}>
+                  You need to connect your wallet to create a project and lock funds. This works with any EVM-compatible wallet (MetaMask, Coinbase, Rainbow, etc.).
+                </p>
+                <button 
+                  type="button" 
+                  className="btn btn-primary"
+                  onClick={async () => {
+                    const connected = await openWalletModal();
+                    if (!connected) showToast("Please connect your wallet", "error");
+                  }}
+                >
+                  <Wallet size={16} /> Connect Wallet
+                </button>
+              </div>
+            )}
+
+            {isConnected && (
+              <div style={{ marginBottom: 20, padding: 16, background: "rgba(34, 197, 94, 0.1)", border: "1px solid #22c55e", borderRadius: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <CheckCircle2 size={20} style={{ color: "#22c55e" }} />
+                  <div>
+                    <div style={{ fontWeight: 600 }}>Connected</div>
+                    <div style={{ fontSize: 12, color: "var(--text-dim)" }}>
+                      {chainName} • {address?.slice(0, 6)}...{address?.slice(-4)}
+                      {walletType && ` (${walletType})`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="form-group">
               <label>Project Name *</label>
@@ -277,13 +399,17 @@ export default function CreateCampaign() {
               />
             </div>
 
-            <div className="form-group">
-              <label>Network</label>
-              <input
-                value={project.chain}
-                onChange={(e) => setProject((p) => ({ ...p, chain: e.target.value }))}
-              />
-            </div>
+            {isConnected && (
+              <div className="form-group">
+                <label>Network</label>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", background: "var(--bg-card)", borderRadius: 6, border: "1px solid var(--border)" }}>
+                  <Globe size={16} style={{ color: "var(--accent)" }} />
+                  <span>{chainName}</span>
+                  <span style={{ fontSize: 12, color: "var(--text-dim)", marginLeft: 8 }}>Chain ID: {chainId}</span>
+                </div>
+                <p className="form-hint">Your project will be created on the current network</p>
+              </div>
+            )}
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }} disabled={loading}>
@@ -344,15 +470,38 @@ export default function CreateCampaign() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Token</label>
-                <input
-                  placeholder="e.g. USDC, ETH, HYPE"
-                  value={fund.token}
-                  onChange={(e) => setFund((f) => ({ ...f, token: e.target.value }))}
-                />
+                <label>Token *</label>
+                <div style={{ position: "relative" }}>
+                  <select
+                    value={fund.token}
+                    onChange={(e) => {
+                      const selected = TOKEN_OPTIONS.find(t => t.symbol === e.target.value);
+                      setFund((f) => ({ 
+                        ...f, 
+                        token: e.target.value,
+                        tokenAddress: selected?.address || ""
+                      }));
+                    }}
+                    style={{ width: "100%", padding: "10px 12px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)" }}
+                  >
+                    {TOKEN_OPTIONS.map(t => (
+                      <option key={t.symbol} value={t.symbol}>{t.symbol} ({t.name})</option>
+                    ))}
+                    <option value="CUSTOM">Custom ERC-20 Token</option>
+                  </select>
+                </div>
+                {fund.token === "CUSTOM" && (
+                  <input
+                    placeholder="Token contract address"
+                    value={fund.tokenAddress}
+                    onChange={(e) => setFund((f) => ({ ...f, tokenAddress: e.target.value }))}
+                    style={{ marginTop: 8 }}
+                  />
+                )}
+                <p className="form-hint">Select the token you want to lock (ETH, USDC, or any ERC-20)</p>
               </div>
               <div className="form-group">
-                <label>Amount to Lock</label>
+                <label>Amount to Lock *</label>
                 <input
                   type="number"
                   placeholder="e.g. 100000"
@@ -372,7 +521,7 @@ export default function CreateCampaign() {
             </div>
 
             <div className="form-group">
-              <label>Spending Rules</label>
+              <label>Spending Rules *</label>
               <textarea
                 value={fund.rules}
                 onChange={(e) => setFund((f) => ({ ...f, rules: e.target.value }))}
@@ -390,16 +539,32 @@ export default function CreateCampaign() {
                 rows={3}
               />
             </div>
+
+            {isConnected && (
+              <div style={{ marginTop: 16, padding: 12, background: "rgba(212, 255, 0, 0.05)", border: "1px solid rgba(212, 255, 0, 0.2)", borderRadius: 6, fontSize: 13 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Globe size={14} style={{ color: "var(--accent)" }} />
+                  <span style={{ fontWeight: 600 }}>Locking on {chainName}</span>
+                </div>
+                <span style={{ color: "var(--text-dim)" }}>Chain ID: {chainId} • Your transaction will execute on this network</span>
+              </div>
+            )}
           </div>
 
           <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
             <button type="button" className="btn btn-outline" onClick={() => setStep(2)}>
               <ArrowLeft size={16} /> Back
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? <><Loader2 size={16} className="spin" /> Locking...</> : <><Lock size={16} /> Lock Fund</>}
+            <button type="submit" className="btn btn-primary" disabled={loading || !isConnected}>
+              {loading ? <><Loader2 size={16} className="spin" /> Processing...</> : <><Lock size={16} /> Lock Fund</>}
             </button>
           </div>
+          
+          {!isConnected && (
+            <p style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 8, textAlign: "center" }}>
+              Connect your wallet to lock funds
+            </p>
+          )}
         </form>
       )}
 
@@ -411,7 +576,7 @@ export default function CreateCampaign() {
           <p style={{ color: "var(--accent)", fontWeight: 700, fontSize: 20, marginBottom: 4 }}>{project.name}</p>
           <p style={{ color: "var(--text-dim)", marginBottom: 8 }}>{category?.name}</p>
           <p style={{ color: "var(--text-dim)", marginBottom: 32, fontSize: 14 }}>
-            {fund.amount} {fund.token} locked for {fund.duration} days. Your community can now see every rule, payment, and verdict.
+            {fund.amount} {fund.token} locked on {chainName} for {fund.duration} days. Your community can now see every rule, payment, and verdict.
           </p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
             <Link to="/explore" className="btn btn-primary">View Projects</Link>
