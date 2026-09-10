@@ -1,8 +1,11 @@
-import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
+import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
+import { RainbowKitProvider, useConnectModal } from "@rainbow-me/rainbowkit";
+import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
 import { Menu, X, Wallet } from "lucide-react";
-import { WalletProvider, useWallet } from "./context/WalletContext";
-import WalletModal from "./components/WalletModal";
 import Landing from "./pages/Landing";
 import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -10,13 +13,30 @@ import CreateCampaign from "./pages/CreateCampaign";
 import SubmitEvidence from "./pages/SubmitEvidence";
 import "./index.css";
 
+// Create wagmi config
+const config = createConfig({
+  chains: [mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia],
+  transports: {
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+    [arbitrum.id]: http(),
+    [bsc.id]: http(),
+    [optimism.id]: http(),
+    [avalanche.id]: http(),
+    [sepolia.id]: http(),
+  },
+  ssr: true,
+});
+
+const queryClient = new QueryClient();
+
 function Navbar() {
   const [open, setOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
-  const location = useLocation();
-  const { address, connecting } = useWallet();
+  const location = window.location.pathname;
+  const { openConnectModal } = useConnectModal();
+  const { address, isConnected } = useAccount();
 
-  const isLanding = location.pathname === "/";
+  const isLanding = location === "/";
   const close = () => setOpen(false);
 
   const shortAddr = address
@@ -41,41 +61,44 @@ function Navbar() {
         <Link to="/create" onClick={close}>Create Project</Link>
         <Link to="/submit" onClick={close}>Submit Proof</Link>
 
-        {shortAddr ? (
-          <button className="btn btn-wallet btn-connected" onClick={() => setWalletOpen(true)}>
+        {isConnected ? (
+          <button className="btn btn-wallet btn-connected">
             <Wallet size={14} />
             <span>{shortAddr}</span>
           </button>
         ) : (
-          <button className="btn btn-wallet" onClick={() => setWalletOpen(true)} disabled={connecting}>
+          <button className="btn btn-wallet" onClick={openConnectModal}>
             <Wallet size={14} />
-            <span>{connecting ? "Connecting..." : "Connect Wallet"}</span>
+            <span>Connect Wallet</span>
           </button>
         )}
       </div>
     </nav>
-    <WalletModal isOpen={walletOpen} onClose={() => setWalletOpen(false)} />
     </>
   );
 }
 
 export default function App() {
   return (
-    <WalletProvider>
-      <BrowserRouter>
-        <div className="app">
-          <Navbar />
-          <main className="main">
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/explore" element={<Explore />} />
-              <Route path="/project/:id" element={<ProjectDetail />} />
-              <Route path="/create" element={<CreateCampaign />} />
-              <Route path="/submit" element={<SubmitEvidence />} />
-            </Routes>
-          </main>
-        </div>
-      </BrowserRouter>
-    </WalletProvider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <BrowserRouter>
+            <div className="app">
+              <Navbar />
+              <main className="main">
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/project/:id" element={<ProjectDetail />} />
+                  <Route path="/create" element={<CreateCampaign />} />
+                  <Route path="/submit" element={<SubmitEvidence />} />
+                </Routes>
+              </main>
+            </div>
+          </BrowserRouter>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

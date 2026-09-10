@@ -111,7 +111,7 @@ export default function CreateCampaign() {
   const [fund, setFund] = useState({ token: "ETH", tokenAddress: "", amount: "", duration: 90, rules: "", recipients: "" });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const { address, connect, chainId, chainName, walletType, isConnected } = useWallet();
+  const { address, connect, chainId, chainName, walletType, isConnected, isAuthenticated } = useWallet();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
