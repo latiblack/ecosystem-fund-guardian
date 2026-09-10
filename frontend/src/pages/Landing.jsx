@@ -98,8 +98,7 @@ export default function Landing() {
           The Spending Contract cannot pay without the Governance Contract's permission.
           Every rule, every payment, every verdict — visible to your community.
           <br /><br />
-          <span className="genlayer-highlight">Powered by GenLayer</span> — the only blockchain where smart contracts
-          can read URLs, understand natural language, and reach AI consensus on-chain.
+          <span className="genlayer-highlight">Powered by GenLayer</span> — the only blockchain where smart contracts can read URLs, understand natural language, and reach AI consensus on-chain.
         </p>
 
         <div className="flow">
