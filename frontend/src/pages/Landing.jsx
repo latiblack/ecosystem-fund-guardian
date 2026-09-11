@@ -100,14 +100,6 @@ export default function Landing() {
             Explore Funds
           </button>
         </div>
-
-        {/* Wallet Info Banner */}
-        {isConnected && walletAddress && (
-          <div className="wallet-banner">
-            <CheckCircle2 size={16} color="#d4ff00" />
-            <span>Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-          </div>
-        )}
       </section>
 
       {/* Projects Section - Only show if connected */}

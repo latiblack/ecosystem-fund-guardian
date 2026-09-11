@@ -4,10 +4,6 @@ import { useWallet } from "../context/WalletContext";
 export default function Navbar({ isConnected, isMobileMenuOpen, onToggleMenu }) {
   const { connectWallet, disconnectWallet, walletAddress } = useWallet();
   
-  // Don't show navbar on landing page
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
-  if (pathname === '/') return null;
-  
   return (
     <nav className="navbar">
       <div className="nav-container">
