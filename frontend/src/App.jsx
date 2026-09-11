@@ -1,13 +1,14 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, createConfig, http, useAccount } from "wagmi";
+import { WagmiProvider, createConfig, http } from "wagmi";
 import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
-import { RainbowKitProvider, getDefaultWallets, useConnectModal } from "@rainbow-me/rainbowkit";
+import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
-import { Menu, X, Wallet } from "lucide-react";
-import WalletProvider from "./context/WalletContext";
+import { Menu, X } from "lucide-react";
+import WalletProvider, { useWallet } from "./context/WalletContext";
 import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
 import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
 import CreateCampaign from "./pages/CreateCampaign";
@@ -40,18 +41,27 @@ const config = createConfig({
 
 const queryClient = new QueryClient();
 
+function ProtectedRoute({ children }) {
+  const { isConnected } = useWallet();
+  const location = useLocation();
+  if (!isConnected) {
+    return (
+      <Navigate
+        to={`/auth?next=${encodeURIComponent(location.pathname)}`}
+        replace
+      />
+    );
+  }
+  return children;
+}
+
 function Navbar() {
   const [open, setOpen] = useState(false);
   const location = window.location.pathname;
-  const { openConnectModal } = useConnectModal();
-  const { address, isConnected } = useAccount();
 
   const isLanding = location === "/";
+  const isAuth = location === "/auth";
   const close = () => setOpen(false);
-
-  const shortAddr = address
-    ? `${address.slice(0, 6)}...${address.slice(-4)}`
-    : null;
 
   return (
     <>
@@ -60,29 +70,27 @@ function Navbar() {
         <img src="/nav-logo.png" alt="EFG" className="logo-img" width="28" height="28" loading="eager" fetchPriority="high" decoding="async" />
       </Link>
 
-      {!isLanding && (
+      {!isLanding && !isAuth && (
         <button className="menu-toggle" onClick={() => setOpen(!open)}>
           {open ? <X size={20} /> : <Menu size={20} />}
         </button>
       )}
 
-      <div className={`nav-links ${open ? "open" : ""}`}>
-        <Link to="/explore" onClick={close}>Explore</Link>
-        <Link to="/create" onClick={close}>Create Project</Link>
-        <Link to="/submit" onClick={close}>Submit Proof</Link>
+      {!isAuth && (
+        <div className={`nav-links ${open ? "open" : ""}`}>
+          <Link to="/explore" onClick={close}>Explore</Link>
+          <Link to="/create" onClick={close}>Create Project</Link>
+          <Link to="/submit" onClick={close}>Submit Proof</Link>
 
-        {isConnected ? (
-          <button className="btn btn-wallet btn-connected">
-            <Wallet size={14} />
-            <span>{shortAddr}</span>
-          </button>
-        ) : (
-          <button className="btn btn-wallet" onClick={openConnectModal}>
-            <Wallet size={14} />
-            <span>Connect Wallet</span>
-          </button>
-        )}
-      </div>
+          <div className="nav-connect-widget">
+            <ConnectButton
+              accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
+              showBalance={{ smallScreen: false, largeScreen: true }}
+              chainStatus="icon"
+            />
+          </div>
+        </div>
+      )}
     </nav>
     </>
   );
@@ -100,10 +108,11 @@ export default function App() {
                 <main className="main">
                   <Routes>
                     <Route path="/" element={<Landing />} />
-                    <Route path="/explore" element={<Explore />} />
-                    <Route path="/project/:id" element={<ProjectDetail />} />
-                    <Route path="/create" element={<CreateCampaign />} />
-                    <Route path="/submit" element={<SubmitEvidence />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+                    <Route path="/project/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                    <Route path="/create" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
+                    <Route path="/submit" element={<ProtectedRoute><SubmitEvidence /></ProtectedRoute>} />
                   </Routes>
                 </main>
               </div>

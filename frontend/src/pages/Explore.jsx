@@ -1,12 +1,8 @@
 import { useState, useEffect } from "react";
-import { useWallet } from "../context/WalletContext";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { supabase, getAllProjects } from "../lib/supabase";
-import { Search, Loader2, Lock, Coins } from "lucide-react";
+import { Search, Loader2, Coins } from "lucide-react";
 
 export default function Explore() {
-  const { isConnected } = useWallet();
-  const { openConnectModal } = useConnectModal();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,21 +29,6 @@ export default function Explore() {
     project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     project.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (!isConnected) {
-    return (
-      <div style={{ textAlign: "center", padding: "48px 24px" }}>
-        <Lock size={56} style={{ color: "var(--accent)", marginBottom: 16 }} />
-        <h2>Connect Your Wallet</h2>
-        <p style={{ color: "var(--text-dim)", marginBottom: 24 }}>
-          You need to connect your wallet to explore projects and lock funds.
-        </p>
-        <button className="btn btn-primary" onClick={() => openConnectModal?.()}>
-          Connect Wallet
-        </button>
-      </div>
-    );
-  }
 
   return (
     <div className="explore-page">

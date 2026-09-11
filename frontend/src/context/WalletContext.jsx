@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useEffect, useState } from "react";
+import { createContext, useContext, useCallback } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
@@ -9,57 +9,30 @@ export const useWalletAuth = () => {
   const { connect, connectors } = useConnect();
   const { openConnectModal } = useConnectModal();
   const { disconnect } = useDisconnect();
-  const [lastKnownAddress, setLastKnownAddress] = useState(null);
-
-  // Persist last known address for better UX
-  useEffect(() => {
-    if (isConnected && address) {
-      setLastKnownAddress(address);
-      localStorage.setItem('lastWalletAddress', address);
-    }
-  }, [isConnected, address]);
-
-  // Restore last known address on load and trigger reconnect
-  useEffect(() => {
-    const savedAddress = localStorage.getItem('lastWalletAddress');
-    if (savedAddress && !isConnected) {
-      // Try to auto-reconnect on page reload
-      const injected = connectors.find(c => c.type === "injected");
-      if (injected) {
-        connect({ connector: injected });
-      }
-    }
-  }, []);
-
-  const isAuthenticated = isConnected || !!lastKnownAddress;
-  const walletAddress = address || lastKnownAddress;
-  const provider = typeof window !== "undefined" ? window.ethereum : null;
 
   const connectWallet = useCallback(() => {
     if (openConnectModal) {
       openConnectModal();
     } else {
-      const injected = connectors.find(c => c.type === "injected");
+      const injected = connectors.find((c) => c.type === "injected");
       connect({ connector: injected || connectors[0] });
     }
   }, [connect, connectors, openConnectModal]);
 
   const disconnectWallet = useCallback(() => {
     disconnect();
-    setLastKnownAddress(null);
-    localStorage.removeItem('lastWalletAddress');
   }, [disconnect]);
 
   // Check if user can access protected routes
   const canAccessProtectedContent = isConnected && !!address;
 
   return {
-    user: isAuthenticated ? { userId: walletAddress || "", chainId: chain?.id } : null,
-    isAuthenticated,
+    user: canAccessProtectedContent ? { userId: address, chainId: chain?.id } : null,
+    isAuthenticated: canAccessProtectedContent,
     canAccessProtectedContent,
-    walletAddress,
+    walletAddress: address,
     chainId: chain?.id,
-    provider,
+    provider: typeof window !== "undefined" ? window.ethereum : null,
     connectWallet,
     disconnectWallet,
     address,

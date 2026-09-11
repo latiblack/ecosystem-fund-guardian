@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useWallet } from "../context/WalletContext";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { supabase } from "../lib/supabase";
 import {
   ShieldAlert,
@@ -21,8 +20,7 @@ import {
 } from "lucide-react";
 
 export default function Landing() {
-  const { isConnected, connectWallet, walletAddress } = useWallet();
-  const { openConnectModal } = useConnectModal();
+  const { isConnected } = useWallet();
   const [projects, setProjects] = useState([]);
 
   // Load projects from Supabase
@@ -45,29 +43,11 @@ export default function Landing() {
   };
 
   const handleLockFund = () => {
-    if (!isConnected) {
-      // Show connect modal first
-      if (openConnectModal) {
-        openConnectModal();
-      } else {
-        connectWallet();
-      }
-      return;
-    }
-    // Wallet connected - redirect to create page
-    window.location.href = "/create";
+    window.location.href = "/auth?next=/create";
   };
 
   const handleExplore = () => {
-    if (!isConnected) {
-      if (openConnectModal) {
-        openConnectModal();
-      } else {
-        connectWallet();
-      }
-      return;
-    }
-    window.location.href = "/explore";
+    window.location.href = "/auth?next=/explore";
   };
 
   return (

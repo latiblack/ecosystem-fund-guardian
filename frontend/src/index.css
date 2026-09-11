@@ -2034,3 +2034,126 @@ a:hover { text-decoration: underline; }
   font-size: 13px;
   margin-bottom: 16px;
 }
+
+/* ===== Auth page ===== */
+.auth-page {
+  min-height: calc(100vh - 140px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 32px;
+  text-align: center;
+  position: relative;
+}
+
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  padding: 1px;
+  background: linear-gradient(160deg, rgba(212, 255, 0, 0.35), transparent 40%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.auth-icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: rgba(212, 255, 0, 0.08);
+  border: 1px solid rgba(212, 255, 0, 0.3);
+  color: var(--accent);
+}
+
+.auth-card h1 {
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+.auth-card p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 28px;
+}
+
+.auth-connect {
+  display: flex;
+  justify-content: center;
+  min-height: 48px;
+}
+
+.auth-connect [data-testid="connect-button"] {
+  background: var(--accent) !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 24px rgba(212, 255, 0, 0.45);
+}
+
+.auth-status {
+  margin-top: 18px;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.auth-hint {
+  margin-top: 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+
+.auth-different {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-different:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 28px;
+  color: var(--text-dim);
+  font-size: 12px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.auth-back:hover {
+  color: var(--accent);
+}
+
+.nav-connect-widget {
+  display: flex;
+  align-items: center;
+}

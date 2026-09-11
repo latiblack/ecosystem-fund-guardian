@@ -44,13 +44,6 @@ export default function CreateCampaign() {
   const { address, chainId, isConnected } = useWallet();
   const { openConnectModal } = useConnectModal();
 
-  // Ensure user is connected - redirect if not
-  useEffect(() => {
-    if (!isConnected) {
-      openConnectModal?.();
-    }
-  }, [isConnected]);
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
@@ -170,18 +163,7 @@ export default function CreateCampaign() {
   const stepLabels = ["Project", "Confirm", "Lock Fund"];
 
   if (!isConnected) {
-    return (
-      <div className="create-page" style={{ textAlign: "center", padding: "48px 24px" }}>
-        <Lock size={56} style={{ color: "var(--accent)", marginBottom: 16 }} />
-        <h2>Connect Your Wallet</h2>
-        <p style={{ color: "var(--text-dim)", marginBottom: 24 }}>
-          You need to connect your wallet to create a project and lock funds.
-        </p>
-        <button className="btn btn-primary" onClick={() => openConnectModal?.()}>
-          Connect Wallet
-        </button>
-      </div>
-    );
+    return null; // ProtectedRoute redirects to /auth
   }
 
   return (
