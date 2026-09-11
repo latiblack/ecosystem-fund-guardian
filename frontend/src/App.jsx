@@ -57,7 +57,7 @@ function Navbar() {
     <>
     <nav className="navbar">
       <Link to="/" className="logo" onClick={close}>
-        <img src="/nav-logo.png" alt="EFG" className="logo-img" />
+        <img src="/nav-logo.png" alt="EFG" className="logo-img" width="28" height="28" loading="eager" fetchPriority="high" decoding="async" />
       </Link>
 
       {!isLanding && (

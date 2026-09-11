@@ -9,7 +9,7 @@ export default function Navbar({ isConnected, isMobileMenuOpen, onToggleMenu }) 
       <div className="nav-container">
         <div className="nav-left">
           <a href="/" className="nav-logo">
-            <img src="/nav-logo.png" alt="Logo" className="nav-logo-img" />
+            <img src="/nav-logo.png" alt="Logo" className="nav-logo-img" width="28" height="28" loading="eager" fetchPriority="high" decoding="async" />
             <span className="nav-title">Ecosystem Fund Guardian</span>
           </a>
         </div>

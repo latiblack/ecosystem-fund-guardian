@@ -75,7 +75,13 @@ export default function Landing() {
       {/* Hero */}
       <section className="hero">
         <div className="hero-image-wrap">
-          <img src="/hero.png" alt="Ecosystem Fund Guardian" className="hero-image" />
+          <picture>
+            <source media="(max-width: 640px)" type="image/avif" srcSet="/hero-400.avif" />
+            <source type="image/avif" srcSet="/hero.avif" />
+            <source media="(max-width: 640px)" type="image/webp" srcSet="/hero-400.webp" />
+            <source type="image/webp" srcSet="/hero.webp" />
+            <img src="/hero.png" alt="Ecosystem Fund Guardian" className="hero-image" width="800" height="800" fetchPriority="high" />
+          </picture>
         </div>
         <h1>
           Prove your ecosystem
