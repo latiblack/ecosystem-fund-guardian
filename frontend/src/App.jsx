@@ -57,10 +57,10 @@ function ProtectedRoute({ children }) {
 
 function Navbar() {
   const [open, setOpen] = useState(false);
-  const location = window.location.pathname;
+  const location = useLocation();
 
-  const isLanding = location === "/";
-  const isAuth = location === "/auth";
+  const isLanding = location.pathname === "/";
+  const isAuth = location.pathname === "/auth";
   const close = () => setOpen(false);
 
   return (
@@ -83,11 +83,13 @@ function Navbar() {
           <Link to="/submit" onClick={close}>Submit Proof</Link>
 
           <div className="nav-connect-widget">
-            <ConnectButton
-              accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
-              showBalance={{ smallScreen: false, largeScreen: true }}
-              chainStatus="icon"
-            />
+            {!isLanding && (
+              <ConnectButton
+                accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
+                showBalance={{ smallScreen: false, largeScreen: true }}
+                chainStatus="icon"
+              />
+            )}
           </div>
         </div>
       )}
