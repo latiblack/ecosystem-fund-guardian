@@ -30,7 +30,7 @@ const wagmiConfig = createConfig({
   connectors: [
     ...connectors,
     metaMask({ shimDisconnect: true }),
-    baseAccount({ apiKey: import.meta.env.VITE_BASE_API_KEY || undefined }),
+    baseAccount({ apiKey: process.env.VITE_WALLETCONNECT_PROJECT_ID || undefined }),
   ],
 });
 
