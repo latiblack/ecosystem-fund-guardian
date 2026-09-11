@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { ShieldCheck, LogOut, ArrowLeft } from "lucide-react";
 import { useWallet } from "../context/WalletContext";
@@ -12,19 +12,19 @@ const DESTINATIONS = {
 
 export default function Auth() {
   const [params] = useSearchParams();
-  const { isConnected, disconnectWallet } = useWallet();
+  const navigate = useNavigate();
+  const { isConnected, isReconnecting, disconnectWallet } = useWallet();
   const next = params.get("next");
   const dest = DESTINATIONS[next] ? next : "/explore";
 
-  // Once the wallet is connected, enter the app
+  // Once the wallet is connected, enter the app — client-side, NO full
+  // page reload (a reload resets wagmi's rehydration and caused the loop).
   useEffect(() => {
     if (isConnected) {
-      const t = setTimeout(() => {
-        window.location.replace(dest);
-      }, 400);
+      const t = setTimeout(() => navigate(dest, { replace: true }), 400);
       return () => clearTimeout(t);
     }
-  }, [isConnected, dest]);
+  }, [isConnected, isReconnecting, dest, navigate]);
 
   return (
     <div className="auth-page">
@@ -57,7 +57,9 @@ export default function Auth() {
           </>
         ) : (
           <div className="auth-hint">
-            Choose from MetaMask, Base, Rainbow, WalletConnect and more.
+            {isReconnecting
+              ? "Restoring your session…"
+              : "Choose from MetaMask, Base, Rainbow, WalletConnect and more."}
           </div>
         )}
 

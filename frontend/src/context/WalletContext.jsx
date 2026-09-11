@@ -5,7 +5,7 @@ import { useConnectModal } from "@rainbow-me/rainbowkit";
 const WalletContext = createContext(null);
 
 export const useWalletAuth = () => {
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected, chain, status } = useAccount();
   const { connect, connectors } = useConnect();
   const { openConnectModal } = useConnectModal();
   const { disconnect } = useDisconnect();
@@ -32,6 +32,10 @@ export const useWalletAuth = () => {
     canAccessProtectedContent,
     walletAddress: address,
     chainId: chain?.id,
+    status,
+    // true while wagmi rehydrates a persisted connection from localStorage —
+    // routes must NOT redirect on "disconnected" during this window
+    isReconnecting: status === "reconnecting" || status === "connecting",
     provider: typeof window !== "undefined" ? window.ethereum : null,
     connectWallet,
     disconnectWallet,

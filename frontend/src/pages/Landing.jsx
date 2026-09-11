@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useWallet } from "../context/WalletContext";
 import { supabase } from "../lib/supabase";
 import {
@@ -21,6 +22,7 @@ import {
 
 export default function Landing() {
   const { isConnected } = useWallet();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
 
   // Load projects from Supabase
@@ -43,11 +45,11 @@ export default function Landing() {
   };
 
   const handleLockFund = () => {
-    window.location.href = "/auth?next=/create";
+    navigate("/auth?next=/create");
   };
 
   const handleExplore = () => {
-    window.location.href = "/auth?next=/explore";
+    navigate("/auth?next=/explore");
   };
 
   return (

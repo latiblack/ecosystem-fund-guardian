@@ -42,8 +42,11 @@ const config = createConfig({
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }) {
-  const { isConnected } = useWallet();
+  const { isConnected, isReconnecting } = useWallet();
   const location = useLocation();
+  // wagmi is still rehydrating the persisted connection from localStorage —
+  // do NOT bounce to /auth yet, or we loop connect -> reload -> disconnect
+  if (isReconnecting) return null;
   if (!isConnected) {
     return (
       <Navigate
