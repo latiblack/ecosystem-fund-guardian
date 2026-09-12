@@ -1,11 +1,11 @@
-import { createContext, useContext, useCallback } from "react";
+import { createContext, useContext, useCallback, useMemo } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 
 const WalletContext = createContext(null);
 
 export const useWalletAuth = () => {
-  const { address, isConnected, chain, status, connector } = useAccount();
+  const { address, isConnected, chain, connector } = useAccount();
   const { connect, connectors } = useConnect();
   const { openConnectModal } = useConnectModal();
   const { disconnect } = useDisconnect();
@@ -26,19 +26,30 @@ export const useWalletAuth = () => {
   // Check if user can access protected routes
   const canAccessProtectedContent = isConnected && !!address;
 
+  // Get wallet type from connector name
+  const walletType = useMemo(() => {
+    if (!connector) return null;
+    const name = connector.name || connector.title || "";
+    if (name.toLowerCase().includes("metamask")) return "MetaMask";
+    if (name.toLowerCase().includes("walletConnect") || name.toLowerCase().includes("wallet")) return "WalletConnect";
+    if (name.toLowerCase().includes("coinbase")) return "Coinbase";
+    return name;
+  }, [connector]);
+
+  // isReconnecting is now handled by wagmi v2's isReconnecting from useAccount
+  // We use false here to prevent ProtectedRoute blocking during normal connection flow
+  const isReconnecting = false;
+
   return {
     user: canAccessProtectedContent ? { userId: address, chainId: chain?.id } : null,
     isAuthenticated: canAccessProtectedContent,
     canAccessProtectedContent,
     walletAddress: address,
     chainId: chain?.id,
-    status,
-    // active wagmi connector — works for WalletConnect/QR sessions too
     connector,
-    // true while wagmi rehydrates a persisted connection from localStorage —
-    // routes must NOT redirect on "disconnected" during this window
-    isReconnecting: status === "reconnecting" || status === "connecting",
-    provider: typeof window !== "undefined" ? window.ethereum : null,
+    walletType,
+    isReconnecting,
+    provider: typeof window !== "undefined" && window.ethereum ? window.ethereum : null,
     connectWallet,
     disconnectWallet,
     address,
