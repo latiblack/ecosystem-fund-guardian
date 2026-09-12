@@ -40,7 +40,7 @@ export default function Auth() {
 
         <div className="auth-connect">
           <ConnectButton
-            accountStatus={isConnected ? "full" : "connect"}
+            accountStatus="avatar"
             chainStatus="icon"
             showBalance={false}
           />
