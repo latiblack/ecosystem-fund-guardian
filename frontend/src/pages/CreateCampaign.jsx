@@ -42,7 +42,7 @@ export default function CreateCampaign() {
   const [fund, setFund] = useState({ token: "ETH", tokenAddress: "", amount: "", duration: 90, rules: "", recipients: "" });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const { address, chainId, isConnected, connector } = useWallet();
+  const { address, chainId, isConnected } = useWallet();
   const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
 
@@ -55,7 +55,6 @@ export default function CreateCampaign() {
     if (!address || !isConnected) {
       throw new Error("No wallet connected. Please connect your wallet first.");
     }
-    // wagmi v2: signMessageAsync takes just the message string
     return await signMessageAsync(message);
   };
 
