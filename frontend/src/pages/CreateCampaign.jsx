@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSignMessage } from "wagmi";
 import { useWallet } from "../context/WalletContext";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { supabase } from "../lib/supabase";
@@ -42,6 +43,7 @@ export default function CreateCampaign() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const { address, chainId, isConnected, connector } = useWallet();
+  const { signMessageAsync } = useSignMessage();
   const { openConnectModal } = useConnectModal();
 
   const showToast = (msg, type = "success") => {
@@ -50,13 +52,13 @@ export default function CreateCampaign() {
   };
 
   const signWithWallet = async (message) => {
-    // Sign through wagmi's ACTIVE CONNECTOR — not window.ethereum directly.
-    // WalletConnect/Coinbase/session-passphrases have no injected provider,
-    // so window.ethereum was undefined even while wagmi said isConnected.
-    if (!address || !connector) {
+    // wagmi's useSignMessage handles every connector type (injected,
+    // WalletConnect/QR, Coinbase) — raw connector.signMessage is not
+    // guaranteed to exist on all of them.
+    if (!address || !isConnected) {
       throw new Error("No wallet connected. Please connect your wallet first.");
     }
-    return await connector.signMessage({ message, account: address });
+    return await signMessageAsync({ message, account: address });
   };
 
   const handleProjectSave = async (e) => {
