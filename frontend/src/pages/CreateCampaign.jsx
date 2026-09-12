@@ -52,13 +52,11 @@ export default function CreateCampaign() {
   };
 
   const signWithWallet = async (message) => {
-    // wagmi's useSignMessage handles every connector type (injected,
-    // WalletConnect/QR, Coinbase) — raw connector.signMessage is not
-    // guaranteed to exist on all of them.
     if (!address || !isConnected) {
       throw new Error("No wallet connected. Please connect your wallet first.");
     }
-    return await signMessageAsync({ message, account: address });
+    // wagmi v2: signMessageAsync takes just the message string
+    return await signMessageAsync(message);
   };
 
   const handleProjectSave = async (e) => {
