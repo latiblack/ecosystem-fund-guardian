@@ -96,8 +96,15 @@ export const updateProject = async (id, fields) => {
     .update(fields)
     .eq('id', id)
     .select()
-    .single()
 
   if (error) throw error
-  return data
+  // .single() throws "Cannot coerce the result to a single JSON object"
+  // whenever the UPDATE matches zero rows (e.g. RLS blocked it), which hides
+  // the real cause. Surface an actionable message instead.
+  if (!data || data.length === 0) {
+    throw new Error(
+      'Project could not be updated — the row was not found or you are not allowed to edit it.'
+    )
+  }
+  return data[0]
 }
