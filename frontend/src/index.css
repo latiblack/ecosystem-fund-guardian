@@ -1399,6 +1399,31 @@ a:hover { text-decoration: underline; }
   flex-shrink: 0;
 }
 
+.project-logo-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.project-card .project-card-header {
+  min-height: 40px;
+}
+
+.project-card .project-arrow {
+  transition: transform 0.2s ease;
+}
+
+.project-card:hover h3 {
+  color: var(--accent);
+}
+
+.project-card:hover .project-arrow {
+  transform: translate(2px, -2px);
+}
+
 .project-logo-lg {
   width: 56px;
   height: 56px;
