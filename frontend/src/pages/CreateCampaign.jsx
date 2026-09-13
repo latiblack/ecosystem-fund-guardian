@@ -171,7 +171,7 @@ export default function CreateCampaign() {
           twitter: project.twitter || null,
           telegram: project.telegram || null,
           discord: project.discord || null,
-          creator_address: address,
+          creator_address: address.toLowerCase(),
           chain_id: chainId,
           created_at: new Date().toISOString(),
         }])
@@ -226,7 +226,7 @@ export default function CreateCampaign() {
           id: campaignId,
           project_id: projectId,
           category: category.id,
-          creator_address: address,
+          creator_address: address.toLowerCase(),
           signature,
           rules: fund.rules,
           max_per_recipient: "0",
