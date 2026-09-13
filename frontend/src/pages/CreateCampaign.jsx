@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useSignMessage } from "wagmi";
 import { useWallet } from "../context/WalletContext";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { supabase } from "../lib/supabase";
 import {
   Lock, Loader2, CheckCircle2, XCircle, ArrowLeft, ArrowRight,
@@ -44,7 +43,6 @@ export default function CreateCampaign() {
   const [toast, setToast] = useState(null);
   const { address, chainId, isConnected } = useWallet();
   const { signMessageAsync } = useSignMessage();
-  const { openConnectModal } = useConnectModal();
 
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
@@ -63,8 +61,7 @@ export default function CreateCampaign() {
     if (!project.name) { showToast("Project name is required", "error"); return; }
     
     if (!isConnected) {
-      openConnectModal?.();
-      showToast("Please connect your wallet first", "error");
+      showToast("Please connect your wallet first - click wallet icon in header", "error");
       return;
     }
     
@@ -109,7 +106,6 @@ export default function CreateCampaign() {
     e.preventDefault();
     
     if (!isConnected) {
-      openConnectModal?.();
       showToast("Please connect your wallet to lock funds", "error");
       return;
     }
