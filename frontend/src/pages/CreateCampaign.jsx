@@ -53,7 +53,7 @@ export default function CreateCampaign() {
     if (!address || !isConnected) {
       throw new Error("No wallet connected. Please connect your wallet first.");
     }
-    return await signMessageAsync(message);
+    return await signMessageAsync({ message });
   };
 
   const handleProjectSave = async (e) => {
