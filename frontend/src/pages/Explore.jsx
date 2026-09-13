@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase, getAllProjects } from "../lib/supabase";
 import { Search, Loader2, Coins, ArrowUpRight, Layers, Lock } from "lucide-react";
+import { FaXTwitter, FaTelegram, FaDiscord, FaGlobe } from "react-icons/fa6";
 
 const CHAIN_NAMES = {
   1: "Ethereum",
@@ -33,6 +34,15 @@ const CHAIN_COLORS = {
 function chainColor(chainId) {
   return CHAIN_COLORS[chainId] || "#d4ff00";
 }
+
+// Project links shown as icon + name. Icons come from react-icons/fa6 so we get
+// the current brand marks (FaXTwitter is the new X logo, not the old bird).
+const PROJECT_LINKS = [
+  { key: "website", label: "Website", Icon: FaGlobe },
+  { key: "twitter", label: "Twitter / X", Icon: FaXTwitter },
+  { key: "telegram", label: "Telegram", Icon: FaTelegram },
+  { key: "discord", label: "Discord", Icon: FaDiscord },
+];
 
 export default function Explore() {
   const [projects, setProjects] = useState([]);
@@ -150,9 +160,6 @@ export default function Explore() {
                   <span className="project-index">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
-                  <span className="project-live">
-                    <span className="project-live-dot" /> LIVE
-                  </span>
                   <span className="project-arrow">
                     <ArrowUpRight size={14} />
                   </span>
@@ -187,6 +194,41 @@ export default function Explore() {
                 <p className="project-desc">
                   {project.description || "No description provided."}
                 </p>
+
+                {(() => {
+                  const active = PROJECT_LINKS.filter((l) => project[l.key]);
+                  if (active.length === 0) return null;
+                  return (
+                    <div className="project-links">
+                      {active.map(({ key, label, Icon }) => (
+                        <span
+                          key={key}
+                          className="project-link"
+                          role="link"
+                          tabIndex={0}
+                          title={label}
+                          onClick={(e) => {
+                            // The whole card is a <Link>; stop it from
+                            // hijacking this click, then open the URL.
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(project[key], "_blank", "noopener,noreferrer");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              window.open(project[key], "_blank", "noopener,noreferrer");
+                            }
+                          }}
+                        >
+                          <Icon size={12} />
+                          <span>{label}</span>
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 <div className="project-stats-row">
                   <div className="project-stat-chip">

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useWallet } from "../context/WalletContext";
 import { supabase, getUserProjects, updateProject } from "../lib/supabase";
+import { FaXTwitter, FaTelegram, FaDiscord, FaGlobe } from "react-icons/fa6";
 
 const CHAIN_NAMES = {
   1: "Ethereum",
@@ -29,10 +30,10 @@ const CHAIN_OPTIONS = Object.entries(CHAIN_NAMES).map(([id, name]) => ({
 }));
 
 const LINKS = [
-  { key: "website", label: "Website" },
-  { key: "twitter", label: "Twitter / X" },
-  { key: "telegram", label: "Telegram" },
-  { key: "discord", label: "Discord" },
+  { key: "website", label: "Website", Icon: FaGlobe },
+  { key: "twitter", label: "Twitter / X", Icon: FaXTwitter },
+  { key: "telegram", label: "Telegram", Icon: FaTelegram },
+  { key: "discord", label: "Discord", Icon: FaDiscord },
 ];
 
 export default function Dashboard() {
@@ -264,7 +265,8 @@ export default function Dashboard() {
                           rel="noopener noreferrer"
                           className="social-link"
                         >
-                          {l.label}
+                          <l.Icon size={12} />
+                          <span>{l.label}</span>
                         </a>
                       ))}
                     </div>

@@ -12,12 +12,9 @@ import {
   ChevronDown,
   ChevronUp,
   Loader2,
-  Globe,
-  MessageCircle,
-  Send,
-  Twitter,
   Layers,
 } from "lucide-react";
+import { FaXTwitter, FaTelegram, FaDiscord, FaGlobe } from "react-icons/fa6";
 import { supabase, getProjectById } from "../lib/supabase";
 import { useWallet } from "../context/WalletContext";
 
@@ -109,10 +106,10 @@ export default function ProjectDetail() {
   const primaryToken = campaigns[0]?.token_symbol || "TOKEN";
 
   const links = [
-    { key: "website", label: "Website", icon: Globe },
-    { key: "twitter", label: "Twitter / X", icon: Twitter },
-    { key: "telegram", label: "Telegram", icon: Send },
-    { key: "discord", label: "Discord", icon: MessageCircle },
+    { key: "website", label: "Website", icon: FaGlobe },
+    { key: "twitter", label: "Twitter / X", icon: FaXTwitter },
+    { key: "telegram", label: "Telegram", icon: FaTelegram },
+    { key: "discord", label: "Discord", icon: FaDiscord },
   ].filter((l) => project[l.key]);
 
   return (
