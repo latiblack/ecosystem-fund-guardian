@@ -19,6 +19,21 @@ function chainName(chainId) {
   return CHAIN_NAMES[chainId] || `Chain ${chainId}`;
 }
 
+const CHAIN_COLORS = {
+  1: "#627EEA",
+  84532: "#F7931A",
+  11155111: "#8A9BB0",
+  137: "#8247E5",
+  56: "#F0B90B",
+  42161: "#28A0F0",
+  10: "#FF0420",
+  43114: "#E84142",
+};
+
+function chainColor(chainId) {
+  return CHAIN_COLORS[chainId] || "#d4ff00";
+}
+
 export default function Explore() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,15 +124,40 @@ export default function Explore() {
         </div>
       ) : (
         <div className="project-grid">
-          {filteredProjects.map((project) => {
+          {filteredProjects.map((project, idx) => {
             const initial = (project.name || "?").charAt(0).toUpperCase();
             const creator = project.creator_address || "";
+            const campaigns = project.campaigns || [];
+            const totalLocked = campaigns.reduce(
+              (s, c) => s + (parseFloat(c.total_locked) || 0),
+              0
+            );
+            const tokenLabel =
+              campaigns.length > 0 && campaigns[0]?.token_symbol
+                ? campaigns[0].token_symbol
+                : "";
+            const chain = chainName(project.chain_id);
+            const color = chainColor(project.chain_id);
+
             return (
               <Link
                 key={project.id}
                 to={`/project/${project.id}`}
                 className="project-card"
+                style={{ "--chain-color": color }}
               >
+                <div className="project-card-top">
+                  <span className="project-index">
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span className="project-live">
+                    <span className="project-live-dot" /> LIVE
+                  </span>
+                  <span className="project-arrow">
+                    <ArrowUpRight size={14} />
+                  </span>
+                </div>
+
                 <div className="project-card-header">
                   {project.logo_url ? (
                     <img
@@ -131,9 +171,16 @@ export default function Explore() {
                   )}
                   <div className="project-info">
                     <h3>{project.name}</h3>
-                    <div className="project-chain">
-                      {chainName(project.chain_id)}
-                    </div>
+                    <span
+                      className="project-chain"
+                      style={{ "--chain-color": color }}
+                    >
+                      <span
+                        className="project-chain-dot"
+                        style={{ background: color }}
+                      />
+                      {chain}
+                    </span>
                   </div>
                 </div>
 
@@ -141,13 +188,32 @@ export default function Explore() {
                   {project.description || "No description provided."}
                 </p>
 
+                <div className="project-stats-row">
+                  <div className="project-stat-chip">
+                    <span className="project-stat-chip-label">FUNDS</span>
+                    <span className="project-stat-chip-value">
+                      {campaigns.length}
+                    </span>
+                  </div>
+                  <div className="project-stat-chip">
+                    <span className="project-stat-chip-label">LOCKED</span>
+                    <span className="project-stat-chip-value accent">
+                      {totalLocked > 0
+                        ? totalLocked.toLocaleString()
+                        : "0"}{" "}
+                      {tokenLabel}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="project-card-footer">
                   <span className="project-stat-label">
-                    By {creator ? `${creator.slice(0, 6)}…${creator.slice(-4)}` : "Unknown"}
+                    By{" "}
+                    {creator
+                      ? `${creator.slice(0, 6)}...${creator.slice(-4)}`
+                      : "Unknown"}
                   </span>
-                  <span className="project-arrow">
-                    View <ArrowUpRight size={12} />
-                  </span>
+                  <span className="project-view-label">View Project</span>
                 </div>
               </Link>
             );
