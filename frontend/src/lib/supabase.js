@@ -28,7 +28,16 @@ export const getOrCreateUser = async (address) => {
 export const getUserProjects = async (address) => {
   const { data, error } = await supabase
     .from('projects')
-    .select('*')
+    .select(`
+      *,
+      campaigns (
+        id,
+        category,
+        token_symbol,
+        total_locked,
+        created_at
+      )
+    `)
     .eq('creator_address', address.toLowerCase())
     .order('created_at', { ascending: false })
 
@@ -47,6 +56,7 @@ export const getAllProjects = async () => {
         rules,
         token_symbol,
         duration_days,
+        total_locked,
         created_at
       )
     `)
@@ -54,4 +64,40 @@ export const getAllProjects = async () => {
 
   if (error) throw error
   return data || []
+}
+
+export const getProjectById = async (id) => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select(`
+      *,
+      campaigns (
+        id,
+        category,
+        rules,
+        token_symbol,
+        token_address,
+        total_locked,
+        duration_days,
+        status,
+        created_at
+      )
+    `)
+    .eq('id', id)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const updateProject = async (id, fields) => {
+  const { data, error } = await supabase
+    .from('projects')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
 }

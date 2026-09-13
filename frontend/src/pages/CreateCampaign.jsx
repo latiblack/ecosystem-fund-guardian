@@ -88,12 +88,12 @@ const TOKENS_BY_CHAIN = {
 
 export default function CreateCampaign() {
   const [step, setStep] = useState(1);
-  const [project, setProject] = useState({ name: "", logo: "", description: "" });
+  const [project, setProject] = useState({ name: "", logo: "", description: "", website: "", twitter: "", telegram: "", discord: "", chainId: null });
   const [category, setCategory] = useState(null);
   const [fund, setFund] = useState({ token: "ETH", tokenAddress: "", amount: "", duration: 90, rules: "", recipients: "" });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const { address, chainId, isConnected } = useWallet();
+  const { address, chainId: walletChainId, isConnected } = useWallet();
   const { signMessageAsync } = useSignMessage();
 
   const showToast = (msg, type = "success") => {
@@ -101,12 +101,25 @@ export default function CreateCampaign() {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Chain-aware token list: derive options from the wallet's connected chain.
+  // Chain selection: user picks in the form (defaults to wallet's connected chain).
+  const chainId = project.chainId || walletChainId || null;
   const chainInfo = chainId ? TOKENS_BY_CHAIN[chainId] : undefined;
   const tokenOptions = useMemo(
     () => chainInfo?.tokens ?? [],
     [chainInfo]
   );
+
+  const CHAIN_OPTIONS = Object.entries(TOKENS_BY_CHAIN).map(([cid, info]) => ({
+    id: Number(cid),
+    name: info.name,
+  }));
+
+  // If no chain selected in form yet, default to wallet's chain when connected.
+  useEffect(() => {
+    if (!project.chainId && walletChainId) {
+      setProject((p) => ({ ...p, chainId: walletChainId }));
+    }
+  }, [walletChainId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // If the user switches chains mid-flow, re-validate the selected token
   // so we never submit a token that doesn't exist on the new chain.
@@ -133,6 +146,7 @@ export default function CreateCampaign() {
   const handleProjectSave = async (e) => {
     e.preventDefault();
     if (!project.name) { showToast("Project name is required", "error"); return; }
+    if (!chainId) { showToast("Please select a chain", "error"); return; }
     
     if (!isConnected) {
       showToast("Please connect your wallet first - click wallet icon in header", "error");
@@ -153,6 +167,10 @@ export default function CreateCampaign() {
           name: project.name,
           description: project.description,
           logo_url: project.logo,
+          website: project.website || null,
+          twitter: project.twitter || null,
+          telegram: project.telegram || null,
+          discord: project.discord || null,
           creator_address: address,
           chain_id: chainId,
           created_at: new Date().toISOString(),
@@ -275,6 +293,27 @@ export default function CreateCampaign() {
             </div>
 
             <div className="form-group">
+              <label>Chain *</label>
+              <div className="chain-select-row" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {CHAIN_OPTIONS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`chain-chip${project.chainId === c.id ? " selected" : ""}`}
+                    onClick={() => setProject((p) => ({ ...p, chainId: c.id }))}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+              <p className="form-hint">
+                {walletChainId && !project.chainId
+                  ? `Defaulting to your wallet's network. You can override above.`
+                  : "Select the chain this project will lock funds on."}
+              </p>
+            </div>
+
+            <div className="form-group">
               <label>Logo URL</label>
               <input
                 placeholder="https://yourproject.com/logo.png"
@@ -291,6 +330,43 @@ export default function CreateCampaign() {
                 value={project.description}
                 onChange={(e) => setProject((p) => ({ ...p, description: e.target.value }))}
                 rows={4}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Website</label>
+              <input
+                placeholder="https://yourproject.com"
+                value={project.website}
+                onChange={(e) => setProject((p) => ({ ...p, website: e.target.value }))}
+              />
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Twitter / X</label>
+                <input
+                  placeholder="https://x.com/yourproject"
+                  value={project.twitter}
+                  onChange={(e) => setProject((p) => ({ ...p, twitter: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label>Telegram</label>
+                <input
+                  placeholder="https://t.me/yourproject"
+                  value={project.telegram}
+                  onChange={(e) => setProject((p) => ({ ...p, telegram: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Discord</label>
+              <input
+                placeholder="https://discord.gg/yourproject"
+                value={project.discord}
+                onChange={(e) => setProject((p) => ({ ...p, discord: e.target.value }))}
               />
             </div>
           </div>

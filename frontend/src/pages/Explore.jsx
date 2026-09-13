@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { supabase, getAllProjects } from "../lib/supabase";
-import { Search, Loader2, Coins, ArrowUpRight } from "lucide-react";
+import { Search, Loader2, Coins, ArrowUpRight, Layers, Lock } from "lucide-react";
 
 const CHAIN_NAMES = {
   1: "Ethereum",
@@ -46,8 +46,44 @@ export default function Explore() {
     project.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Metrics
+  const allCampaigns = projects.flatMap((p) => p.campaigns || []);
+  const totalLocked = allCampaigns.reduce(
+    (s, c) => s + (parseFloat(c.total_locked) || 0),
+    0
+  );
+  const totalFunds = allCampaigns.length;
+  const capped = [...new Set(allCampaigns.map((c) => c.token_symbol).filter(Boolean))];
+  const tokenLabel = capped.length === 1 ? capped[0] : "TOKENS";
+
   return (
     <div className="explore-page">
+      <div className="explore-metrics">
+        <div className="explore-metric">
+          <Layers size={18} className="icon-accent" />
+          <div>
+            <div className="explore-metric-value">{projects.length}</div>
+            <div className="explore-metric-label">Projects</div>
+          </div>
+        </div>
+        <div className="explore-metric">
+          <Lock size={18} className="icon-accent" />
+          <div>
+            <div className="explore-metric-value">
+              {totalLocked > 0 ? totalLocked.toLocaleString() : "0"} {tokenLabel}
+            </div>
+            <div className="explore-metric-label">Total Locked</div>
+          </div>
+        </div>
+        <div className="explore-metric">
+          <Coins size={18} className="icon-accent" />
+          <div>
+            <div className="explore-metric-value">{totalFunds}</div>
+            <div className="explore-metric-label">Locked Funds</div>
+          </div>
+        </div>
+      </div>
+
       <div className="search-bar">
         <Search size={16} />
         <input

@@ -13,6 +13,7 @@ import Explore from "./pages/Explore";
 import ProjectDetail from "./pages/ProjectDetail";
 import CreateCampaign from "./pages/CreateCampaign";
 import SubmitEvidence from "./pages/SubmitEvidence";
+import Dashboard from "./pages/Dashboard";
 import "./index.css";
 
 // Create wagmi config
@@ -84,6 +85,7 @@ function Navbar() {
           <Link to="/explore" onClick={close}>Explore</Link>
           <Link to="/create" onClick={close}>Create Project</Link>
           <Link to="/submit" onClick={close}>Submit Proof</Link>
+          <Link to="/dashboard" onClick={close}>Dashboard</Link>
 
           <div className="nav-connect-widget">
             {!isLanding && (
@@ -118,6 +120,7 @@ export default function App() {
                     <Route path="/project/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                     <Route path="/create" element={<ProtectedRoute><CreateCampaign /></ProtectedRoute>} />
                     <Route path="/submit" element={<ProtectedRoute><SubmitEvidence /></ProtectedRoute>} />
+                    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                   </Routes>
                 </main>
               </div>
