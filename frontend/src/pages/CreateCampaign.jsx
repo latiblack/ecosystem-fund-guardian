@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSignMessage } from "wagmi";
 import { useWallet } from "../context/WalletContext";
 import { supabase } from "../lib/supabase";
@@ -25,14 +25,66 @@ const RULE_TEMPLATES = {
   community: `This ecosystem fund is for community growth and ambassador programs.\nApproved uses:\n- Ambassador rewards with verified activity logs\n- Community moderator compensation with contribution proof\n- Translation and localization bounties\n- Community content creation with engagement metrics\n\nNOT approved:\n- Rewards without verifiable activity\n- Airdrops or giveaways without conditions\n- Payments to inactive or unverifiable contributors`,
 };
 
-const TOKEN_OPTIONS = [
-  { symbol: "ETH", name: "Ethereum", type: "native" },
-  { symbol: "USDC", name: "USD Coin", type: "erc20", address: "0xA0b86a33E6441E6C7636C8d5b0e2B3A5A0b0c0D1" },
-  { symbol: "USDT", name: "Tether", type: "erc20", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
-  { symbol: "DAI", name: "Dai", type: "erc20", address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
-  { symbol: "MATIC", name: "Polygon", type: "native" },
-  { symbol: "BNB", name: "BNB", type: "native" },
-];
+// Tokens available per chain (keyed by wagmi chainId). The token select
+// derives its options from the wallet's CURRENTLY CONNECTED chain.
+const TOKENS_BY_CHAIN = {
+  1: { // Ethereum Mainnet
+    name: "Ethereum",
+    tokens: [
+      { symbol: "ETH", name: "Ethereum", type: "native" },
+      { symbol: "USDC", name: "USD Coin", type: "erc20", address: "0xA0b86a33E6441E6C7636C8d5b0e2B3A5A0b0c0D1" },
+      { symbol: "USDT", name: "Tether", type: "erc20", address: "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
+      { symbol: "DAI", name: "Dai", type: "erc20", address: "0x6B175474E89094C44Da98b954EedeAC495271d0F" },
+    ],
+  },
+  84532: { // Base Sepolia
+    name: "Base Sepolia",
+    tokens: [
+      { symbol: "ETH", name: "Sepolia ETH", type: "native" },
+    ],
+  },
+  11155111: { // Sepolia
+    name: "Sepolia",
+    tokens: [
+      { symbol: "ETH", name: "Sepolia ETH", type: "native" },
+    ],
+  },
+  137: { // Polygon
+    name: "Polygon",
+    tokens: [
+      { symbol: "POL", name: "Polygon", type: "native" },
+      { symbol: "USDC", name: "USD Coin (PoS)", type: "erc20", address: "0x3c499c542cEF5E3811e1192ce70d8cc03d5c3359" },
+    ],
+  },
+  56: { // BNB Smart Chain
+    name: "BNB Smart Chain",
+    tokens: [
+      { symbol: "BNB", name: "BNB", type: "native" },
+      { symbol: "USDT", name: "Tether", type: "erc20", address: "0x55d398326f99059fF775485246999027B3197955" },
+    ],
+  },
+  42161: { // Arbitrum One
+    name: "Arbitrum One",
+    tokens: [
+      { symbol: "ETH", name: "Ethereum", type: "native" },
+      { symbol: "USDC", name: "USD Coin", type: "erc20", address: "0xaf88d063e77c58cF5355E955d5742a62416A742e" },
+    ],
+  },
+  10: { // Optimism
+    name: "Optimism",
+    tokens: [
+      { symbol: "ETH", name: "Ethereum", type: "native" },
+      { symbol: "USDC", name: "USD Coin", type: "erc20", address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85" },
+    ],
+  },
+  43114: { // Avalanche
+    name: "Avalanche",
+    tokens: [
+      { symbol: "AVAX", name: "Avalanche", type: "native" },
+      { symbol: "USDC", name: "USD Coin", type: "erc20", address: "0xB97EF9Ef8734C71904D8002B8E5Db697Ac20F6da" },
+    ],
+  },
+};
 
 export default function CreateCampaign() {
   const [step, setStep] = useState(1);
@@ -48,6 +100,28 @@ export default function CreateCampaign() {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  // Chain-aware token list: derive options from the wallet's connected chain.
+  const chainInfo = chainId ? TOKENS_BY_CHAIN[chainId] : undefined;
+  const tokenOptions = useMemo(
+    () => chainInfo?.tokens ?? [],
+    [chainInfo]
+  );
+
+  // If the user switches chains mid-flow, re-validate the selected token
+  // so we never submit a token that doesn't exist on the new chain.
+  useEffect(() => {
+    if (!chainId) return;
+    const valid = tokenOptions.some((t) => t.symbol === fund.token);
+    if (!valid && tokenOptions.length > 0) {
+      const first = tokenOptions[0];
+      setFund((f) => ({
+        ...f,
+        token: first.symbol,
+        tokenAddress: first.type === "erc20" ? first.address : "",
+      }));
+    }
+  }, [chainId, tokenOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const signWithWallet = async (message) => {
     if (!address || !isConnected) {
@@ -122,7 +196,10 @@ export default function CreateCampaign() {
       const message = JSON.stringify({ campaignId, project_id: projectId });
       const signature = await signWithWallet(message);
       
-      const tokenInfo = TOKEN_OPTIONS.find(t => t.symbol === fund.token) || { symbol: fund.token, type: "unknown" };
+      const tokenInfo = tokenOptions.find(t => t.symbol === fund.token);
+      if (!tokenInfo) {
+        throw new Error("Selected token is not available on your connected chain. Please pick a token from the list.");
+      }
       
       // Save campaign to Supabase
       const { error } = await supabase
@@ -277,22 +354,33 @@ export default function CreateCampaign() {
             <div className="form-row">
               <div className="form-group">
                 <label>Token *</label>
-                <select
-                  value={fund.token}
-                  onChange={(e) => {
-                    const selected = TOKEN_OPTIONS.find(t => t.symbol === e.target.value);
-                    setFund((f) => ({ 
-                      ...f, 
-                      token: e.target.value,
-                      tokenAddress: selected?.address || ""
-                    }));
-                  }}
-                  style={{ width: "100%", padding: "10px 12px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)" }}
-                >
-                  {TOKEN_OPTIONS.map(t => (
-                    <option key={t.symbol} value={t.symbol}>{t.symbol} ({t.name})</option>
-                  ))}
-                </select>
+                <p className="form-hint" style={{ marginBottom: 6 }}>
+                  On {chainInfo ? chainInfo.name : "your connected network"}
+                  {chainId ? ` (chain ${chainId})` : ""}
+                </p>
+                {tokenOptions.length === 0 ? (
+                  <p style={{ color: "var(--text-dim)", fontSize: 13 }}>
+                    No tokens listed for this chain yet — switch your wallet to
+                    a supported network (e.g. Sepolia).
+                  </p>
+                ) : (
+                  <select
+                    value={fund.token}
+                    onChange={(e) => {
+                      const selected = tokenOptions.find(t => t.symbol === e.target.value);
+                      setFund((f) => ({ 
+                        ...f, 
+                        token: e.target.value,
+                        tokenAddress: selected?.address || ""
+                      }));
+                    }}
+                    style={{ width: "100%", padding: "10px 12px", background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: 6, color: "var(--text)" }}
+                  >
+                    {tokenOptions.map(t => (
+                      <option key={t.symbol} value={t.symbol}>{t.symbol} ({t.name})</option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div className="form-group">
                 <label>Amount to Lock *</label>
