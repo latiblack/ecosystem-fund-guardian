@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, createConfig, http } from "wagmi";
+import { WagmiProvider, createConfig, http, createStorage } from "wagmi";
 import { mainnet, polygon, arbitrum, bsc, optimism, avalanche, sepolia } from "wagmi/chains";
 import { RainbowKitProvider, ConnectButton, getDefaultWallets } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Loader2 } from "lucide-react";
 import WalletProvider, { useWallet } from "./context/WalletContext";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
@@ -37,7 +37,11 @@ const config = createConfig({
     [sepolia.id]: http(),
   },
   connectors,
-  ssr: true,
+  // Standard client-side SPA persistence: the connector session is written to
+  // localStorage and restored automatically on the next visit, so a returning
+  // user stays connected until they explicitly disconnect their wallet.
+  storage: createStorage({ storage: window.localStorage }),
+  ssr: false,
 });
 
 const queryClient = new QueryClient();
@@ -45,9 +49,16 @@ const queryClient = new QueryClient();
 function ProtectedRoute({ children }) {
   const { isConnected, isReconnecting } = useWallet();
   const location = useLocation();
-  // wagmi is still rehydrating the persisted connection from localStorage —
-  // do NOT bounce to /auth yet, or we loop connect -> reload -> disconnect
-  if (isReconnecting) return null;
+  // wagmi is rehydrating the persisted connection from localStorage. Wait for it
+  // to finish — bouncing to /auth here would log out a returning user on every
+  // page load. Only redirect once we know there is genuinely no session.
+  if (isReconnecting) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 0" }}>
+        <Loader2 size={28} className="spin icon-accent" />
+      </div>
+    );
+  }
   if (!isConnected) {
     return (
       <Navigate

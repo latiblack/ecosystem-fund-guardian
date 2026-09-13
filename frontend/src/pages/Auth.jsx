@@ -21,10 +21,9 @@ export default function Auth() {
   // page reload (a reload resets wagmi's rehydration and caused the loop).
   useEffect(() => {
     if (isConnected) {
-      const t = setTimeout(() => navigate(dest, { replace: true }), 400);
-      return () => clearTimeout(t);
+      navigate(dest, { replace: true });
     }
-  }, [isConnected, isReconnecting, dest, navigate]);
+  }, [isConnected, dest, navigate]);
 
   return (
     <div className="auth-page">

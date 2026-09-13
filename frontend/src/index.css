@@ -16,6 +16,10 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Never paint the UA default focus ring (blue on Chrome/Safari). Each
+   component opts into its own styled :focus-visible treatment instead. */
+*:focus { outline: none; }
+
 html, body {
   overflow-x: clip;
 }
@@ -1396,6 +1400,29 @@ a:hover { text-decoration: underline; }
     0 0 28px -8px var(--chain-color, var(--accent));
   z-index: 1;
   text-decoration: none;
+}
+
+/* Keyboard focus — remove the browser's default blue ring and replace it with
+   a styled lemon outline that matches the terminal design language. */
+.project-card:focus { outline: none; }
+
+.project-card:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 0 4px rgba(212, 255, 0, 0.14),
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 0 30px -6px var(--accent);
+}
+
+/* Global default focus treatment for interactive elements that opt in. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .project-card-header {
