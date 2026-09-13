@@ -88,9 +88,9 @@ function Navbar() {
           <div className="nav-connect-widget">
             {!isLanding && (
               <ConnectButton
-                accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
-                showBalance={{ smallScreen: false, largeScreen: true }}
+                accountStatus="avatar"
                 chainStatus="icon"
+                showBalance={false}
               />
             )}
           </div>
